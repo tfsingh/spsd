@@ -46,7 +46,7 @@ fn main() {
             cmd::new::create_new_instance(name, size, region)
         }),
         Some(("modify", args)) => handle_command_with_all(args, |name, size, region| {
-            cmd::new::create_new_instance(name, size, region)
+            cmd::modify::modify_instance(name, size, region)
         }),
         Some(("start", args)) => {
             handle_command_with_name(args, |name| cmd::start::start_instance(name))
