@@ -118,14 +118,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ecx"
-version = "0.1.0"
-dependencies = [
- "clap",
- "csv",
-]
-
-[[package]]
 name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -185,6 +177,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "spec"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "csv",
 ]
 
 [[package]]
