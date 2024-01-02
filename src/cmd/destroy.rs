@@ -1,4 +1,4 @@
 use crate::lib;
 pub fn destroy_instance(name: &String) {
-    lib::instances::delete_instance(name);
+    println!("{:?}", lib::instances::delete_instance(name));
 }

@@ -3,8 +3,10 @@ use csv::ReaderBuilder;
 use csv::StringRecord;
 use csv::WriterBuilder;
 use std::error::Error;
+use std::fs::OpenOptions;
 
 const PATH: &str = "instances.csv";
+const HEADERS: [&str; 4] = ["machine_id", "name", "size", "region"];
 
 pub fn get_instance(name: &String) -> Result<Instance, Box<dyn Error>> {
     let mut reader = ReaderBuilder::new().has_headers(true).from_path(PATH)?;
@@ -25,7 +27,12 @@ pub fn create_instance(
     size: &String,
     region: &String,
 ) -> Result<(), Box<dyn Error>> {
-    let mut writer = WriterBuilder::new().from_path(PATH)?;
+    let file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(PATH)
+        .unwrap();
+    let mut writer = csv::Writer::from_writer(file);
 
     let name_verification = get_instance(name);
 
@@ -41,18 +48,21 @@ pub fn create_instance(
 
 pub fn delete_instance(name: &str) -> Result<Option<Instance>, Box<dyn Error>> {
     let mut rows = get_instances()?;
+    let mut deleted_instance: Option<Instance> = None;
 
-    let index = rows.iter().position(|instance| instance.name == name);
+    if let Some(index) = rows.iter().position(|instance| instance.name == name) {
+        deleted_instance = Some(rows.remove(index));
+    }
 
-    let deleted_instance = match index {
-        Some(i) => Some(rows.remove(i)),
-        None => None,
-    };
+    println!("{:?}", rows);
 
-    let mut wtr = WriterBuilder::new().has_headers(true).from_path(PATH)?;
+    let file = OpenOptions::new().write(true).truncate(true).open(PATH)?;
+    let mut writer = WriterBuilder::new().from_writer(file);
+
+    writer.write_record(HEADERS)?;
 
     for instance in &rows {
-        wtr.write_record(&[
+        writer.write_record(&[
             &instance.machine_id,
             &instance.name,
             &instance.size,
@@ -60,7 +70,7 @@ pub fn delete_instance(name: &str) -> Result<Option<Instance>, Box<dyn Error>> {
         ])?;
     }
 
-    wtr.flush()?;
+    writer.flush()?;
 
     Ok(deleted_instance)
 }
