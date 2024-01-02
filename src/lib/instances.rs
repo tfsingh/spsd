@@ -1,12 +1,11 @@
+use super::constants::HEADERS;
+use super::constants::PATH;
 use super::types::Instance;
 use csv::ReaderBuilder;
 use csv::StringRecord;
 use csv::WriterBuilder;
 use std::error::Error;
 use std::fs::OpenOptions;
-
-const PATH: &str = "instances.csv";
-const HEADERS: [&str; 4] = ["machine_id", "name", "size", "region"];
 
 pub fn get_instance(name: &String) -> Result<Instance, Box<dyn Error>> {
     let mut reader = ReaderBuilder::new().has_headers(true).from_path(PATH)?;

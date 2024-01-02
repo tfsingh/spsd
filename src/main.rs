@@ -1,4 +1,5 @@
 use clap::{arg, ArgMatches, Command};
+use lib::constants::{POSSIBLE_REGIONS, POSSIBLE_SIZES};
 mod cmd;
 mod lib;
 fn main() {
@@ -10,32 +11,48 @@ fn main() {
         .subcommand(
             Command::new("new")
                 .about("Create a new instance")
-                .arg(arg!(<name> "Name of instance"))
-                .arg(arg!(<size> "Size of instance"))
-                .arg(arg!(<region> "Region of instance"))
+                .arg(arg!(<name> "Name of instance").required(true))
+                .arg(
+                    arg!(<size> "Size of instance")
+                        .value_parser(POSSIBLE_SIZES)
+                        .required(true),
+                )
+                .arg(
+                    arg!(<region> "Region of instance")
+                        .value_parser(POSSIBLE_REGIONS)
+                        .required(true),
+                )
                 .arg_required_else_help(true),
         )
         .subcommand(
             Command::new("modify")
                 .about("Modify the configuration of an instance")
-                .arg(arg!(<name> "Name of instance"))
-                .arg(arg!(<size> "Size of instance"))
-                .arg(arg!(<region> "Region of instance")),
+                .arg(arg!(<name> "Name of instance").required(true))
+                .arg(
+                    arg!(<size> "Size of instance")
+                        .value_parser(POSSIBLE_SIZES)
+                        .required(true),
+                )
+                .arg(
+                    arg!(<region> "Region of instance")
+                        .value_parser(POSSIBLE_REGIONS)
+                        .required(true),
+                ),
         )
         .subcommand(
             Command::new("start")
                 .about("Start an instance")
-                .arg(arg!(<name> "Name of instance")),
+                .arg(arg!(<name> "Name of instance").required(true)),
         )
         .subcommand(
             Command::new("stop")
                 .about("Stop an instance")
-                .arg(arg!(<name> "Name of instance")),
+                .arg(arg!(<name> "Name of instance").required(true)),
         )
         .subcommand(
             Command::new("destroy")
                 .about("Destroy an instance")
-                .arg(arg!(<name> "Name of instance")),
+                .arg(arg!(<name> "Name of instance").required(true)),
         )
         .subcommand(Command::new("list").about("List all instances"))
         .subcommand(Command::new("profile").about("Set profile for infra provider"))
