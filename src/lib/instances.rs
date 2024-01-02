@@ -1,4 +1,4 @@
-use super::types;
+use super::types::Instance;
 use csv::ReaderBuilder;
 use csv::StringRecord;
 use csv::WriterBuilder;
@@ -6,20 +6,13 @@ use std::error::Error;
 
 const PATH: &str = "instances.csv";
 
-pub fn get_instance(name: &String) -> Result<types::Instance, Box<dyn Error>> {
+pub fn get_instance(name: &String) -> Result<Instance, Box<dyn Error>> {
     let mut reader = ReaderBuilder::new().has_headers(true).from_path(PATH)?;
 
     for result in reader.records() {
         let record = result?;
         if record.get(1).unwrap() == name {
-            return {
-                Ok(types::Instance {
-                    machine_id: record.get(0).map(String::from).ok_or("Invalid CSV")?,
-                    name: record.get(1).map(String::from).ok_or("Invalid CSV")?,
-                    size: record.get(2).map(String::from).ok_or("Invalid CSV")?,
-                    region: record.get(3).map(String::from).ok_or("Invalid CSV")?,
-                })
-            };
+            return get_instance_from_record(record);
         }
     }
 
@@ -46,21 +39,58 @@ pub fn create_instance(
     }
 }
 
-pub fn delete_instance(name: &String) -> Result<(), Box<dyn Error>> {
-    let mut rdr = ReaderBuilder::new().has_headers(true).from_path(PATH)?;
+pub fn delete_instance(name: &str) -> Result<Option<Instance>, Box<dyn Error>> {
+    let mut rows = get_instances()?;
 
-    let rows: Vec<_> = rdr.records().collect::<Result<Vec<StringRecord>, _>>()?;
+    let index = rows.iter().position(|instance| instance.name == name);
 
-    let modified_rows: Vec<_> = rows
-        .into_iter()
-        .filter(|record| record.iter().any(|field| field == name))
-        .collect();
+    let deleted_instance = match index {
+        Some(i) => Some(rows.remove(i)),
+        None => None,
+    };
 
     let mut wtr = WriterBuilder::new().has_headers(true).from_path(PATH)?;
-    for record in modified_rows {
-        wtr.write_record(&record.iter().collect::<Vec<&str>>())?;
+
+    for instance in &rows {
+        wtr.write_record(&[
+            &instance.machine_id,
+            &instance.name,
+            &instance.size,
+            &instance.region,
+        ])?;
     }
+
     wtr.flush()?;
 
-    Ok(())
+    Ok(deleted_instance)
+}
+
+pub fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
+    let mut rdr = ReaderBuilder::new().has_headers(true).from_path(PATH)?;
+
+    let rows: Result<Vec<Instance>, Box<dyn Error>> = rdr
+        .records()
+        .map(|record| {
+            let record = record.map_err(|e| Box::new(e) as Box<dyn Error>)?;
+            get_instance_from_record(record)
+        })
+        .collect();
+
+    rows
+}
+
+fn get_instance_from_record(record: StringRecord) -> Result<Instance, Box<dyn Error>> {
+    let machine_id = record
+        .get(0)
+        .map(String::from)
+        .ok_or("machine_id corrupted")?;
+    let name = record.get(1).map(String::from).ok_or("name corrupted")?;
+    let size = record.get(2).map(String::from).ok_or("size corrupted")?;
+    let region = record.get(3).map(String::from).ok_or("region corrupted")?;
+    Ok(Instance {
+        machine_id,
+        name,
+        size,
+        region,
+    })
 }
