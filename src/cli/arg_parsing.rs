@@ -1,6 +1,7 @@
 use crate::lib::constants::{POSSIBLE_REGIONS, POSSIBLE_SIZES};
 use clap::{arg, ArgMatches, Command};
 
+// changes -> switch to cpu/memory, let region be set to a default
 pub fn read_input() -> ArgMatches {
     Command::new("spec")
         .author("Tej Singh, tejfsingh@gmail.com")

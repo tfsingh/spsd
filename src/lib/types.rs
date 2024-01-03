@@ -2,17 +2,18 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
-pub struct InstanceData {
-    pub size: i32,
-    pub disk: i32,
-}
-
 #[derive(Debug)]
 pub struct Instance {
     pub machine_id: String,
     pub name: String,
     pub size: String,
     pub region: String,
+}
+
+#[derive(Debug)]
+pub struct InstanceSpecs {
+    pub cpus: u32,
+    pub memory: u32,
 }
 
 // structs for parsing fly's api responses from fade (https://github.com/nebulatgs/fade/)
@@ -66,8 +67,8 @@ pub struct Port {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Guest {
     pub cpu_kind: String,
-    pub cpus: i64,
-    pub memory_mb: i64,
+    pub cpus: u32,
+    pub memory_mb: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -80,5 +81,5 @@ pub struct Init {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Restart {
-    pub policy: String,
+    pub policy: Option<String>,
 }
