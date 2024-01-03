@@ -1,23 +1,13 @@
-use super::constants::HEADERS;
-use super::constants::PATH;
-use super::types::Instance;
-use csv::ReaderBuilder;
-use csv::StringRecord;
-use csv::WriterBuilder;
+use crate::lib::types::Machines;
+
+use super::constants::{get_api_key, get_app_name, get_hostname};
+use super::types::{Instance, Machine};
+use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use std::error::Error;
-use std::fs::OpenOptions;
+use tokio;
 
 pub fn get_instance(name: &String) -> Result<Instance, Box<dyn Error>> {
-    let mut reader = ReaderBuilder::new().has_headers(true).from_path(PATH)?;
-
-    for result in reader.records() {
-        let record = result?;
-        if record.get(1).unwrap() == name {
-            return get_instance_from_record(record);
-        }
-    }
-
-    Err("Instance with given name does not exist".into())
+    unimplemented!()
 }
 
 pub fn create_instance(
@@ -26,80 +16,58 @@ pub fn create_instance(
     size: &String,
     region: &String,
 ) -> Result<(), Box<dyn Error>> {
-    let file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open(PATH)
-        .unwrap();
-    let mut writer = csv::Writer::from_writer(file);
-
-    let name_verification = get_instance(name);
-
-    if let Err(_) = name_verification {
-        writer.write_record(&[machine_id, name, size, region])?;
-        writer.flush()?;
-
-        Ok(())
-    } else {
-        Err("Instance with given name already exists".into())
-    }
+    unimplemented!()
 }
 
 pub fn delete_instance(name: &str) -> Result<Option<Instance>, Box<dyn Error>> {
-    let mut rows = get_instances()?;
-    let mut deleted_instance: Option<Instance> = None;
-
-    if let Some(index) = rows.iter().position(|instance| instance.name == name) {
-        deleted_instance = Some(rows.remove(index));
-    }
-
-    println!("{:?}", rows);
-
-    let file = OpenOptions::new().write(true).truncate(true).open(PATH)?;
-    let mut writer = WriterBuilder::new().from_writer(file);
-
-    writer.write_record(HEADERS)?;
-
-    for instance in &rows {
-        writer.write_record(&[
-            &instance.machine_id,
-            &instance.name,
-            &instance.size,
-            &instance.region,
-        ])?;
-    }
-
-    writer.flush()?;
-
-    Ok(deleted_instance)
+    unimplemented!()
 }
 
-pub fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
-    let mut rdr = ReaderBuilder::new().has_headers(true).from_path(PATH)?;
+#[tokio::main]
+pub async fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
+    let hostname = get_hostname()? + "/v1/apps/spec/machines";
+    let api_key = get_api_key()?;
 
-    let rows: Result<Vec<Instance>, Box<dyn Error>> = rdr
-        .records()
-        .map(|record| {
-            let record = record.map_err(|e| Box::new(e) as Box<dyn Error>)?;
-            get_instance_from_record(record)
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+    let authorization_value = HeaderValue::from_str(&format!("Bearer {}", api_key))?;
+    headers.insert(AUTHORIZATION, authorization_value);
+
+    let client = reqwest::Client::new();
+
+    let response = client.get(&hostname).headers(headers).send().await?;
+    let success = response.status().is_success();
+    let body = response.text().await?;
+
+    if success {
+        let machines: Machines = serde_json::from_str(&body)?;
+        let instances = parse_response_body(machines)?;
+        Ok(instances)
+    } else {
+        Err(body.into())
+    }
+}
+
+fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Error>> {
+    let mut instances = Vec::new();
+    for machine in machines.iter() {
+        instances.push(Instance {
+            machine_id: machine.id.clone(),
+            name: machine.name.clone(),
+            size: match &machine.config.guest {
+                Some(guest) => match guest.cpus {
+                    1 => String::from("micro"),
+                    2 => String::from("small"),
+                    4 => String::from("med"),
+                    8 => String::from("large"),
+                    16 => String::from("xl"),
+                    _ => String::from("unknown"),
+                },
+                _ => String::from("none"),
+            },
+            region: machine.region.clone(),
         })
-        .collect();
-
-    rows
-}
-
-fn get_instance_from_record(record: StringRecord) -> Result<Instance, Box<dyn Error>> {
-    let machine_id = record
-        .get(0)
-        .map(String::from)
-        .ok_or("machine_id corrupted")?;
-    let name = record.get(1).map(String::from).ok_or("name corrupted")?;
-    let size = record.get(2).map(String::from).ok_or("size corrupted")?;
-    let region = record.get(3).map(String::from).ok_or("region corrupted")?;
-    Ok(Instance {
-        machine_id,
-        name,
-        size,
-        region,
-    })
+    }
+    Ok(instances)
 }
