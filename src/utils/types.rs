@@ -6,14 +6,27 @@ use std::collections::HashMap;
 pub struct Instance {
     pub machine_id: String,
     pub name: String,
-    pub size: String,
+    pub specs: InstanceSpecs,
     pub region: String,
+    pub state: InstanceState,
 }
 
 #[derive(Debug)]
 pub struct InstanceSpecs {
     pub cpus: u32,
     pub memory: u32,
+}
+
+#[derive(Debug)]
+pub enum InstanceState {
+    Running,
+    Stopped,
+}
+
+impl InstanceSpecs {
+    pub fn phony() -> Self {
+        Self { cpus: 0, memory: 0 }
+    }
 }
 
 // structs for parsing fly's api responses from fade (https://github.com/nebulatgs/fade/)

@@ -1,12 +1,11 @@
-use crate::lib::types::{Machine, Machines};
+use crate::utils::types::{Machine, Machines};
 
-use super::constants::{get_headers, get_hostname, get_size_from_cpu_count, get_specs_from_size};
+use super::constants::{get_headers, get_hostname, parse_state};
 use super::types::{Instance, InstanceSpecs};
 use std::error::Error;
 use tokio;
 
-// todo: switch to cpu/memory instead of size
-pub fn get_instance_id_from_name(name: &String) -> Result<String, Box<dyn Error>> {
+fn get_instance_id_from_name(name: &String) -> Result<String, Box<dyn Error>> {
     let id = get_instances()?
         .iter()
         .find(|instance| &instance.name == name)
@@ -17,19 +16,19 @@ pub fn get_instance_id_from_name(name: &String) -> Result<String, Box<dyn Error>
 
 pub fn create_instance(
     name: &String,
-    size: &String,
+    cpus: u32,
+    memory: u32,
     region: &String,
 ) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()?;
-    let specs = get_specs_from_size(size)?;
-    let body_to_send = create_body_from_specs(name, specs, region)?;
+    let body_to_send = create_body_from_specs(name, InstanceSpecs { cpus, memory }, region)?;
     cru_request(hostname, body_to_send)
 }
 
-pub fn update_instance(name: &String, size: &String) -> Result<Instance, Box<dyn Error>> {
+pub fn update_instance(name: &String, cpus: u32, memory: u32) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
-    let specs = get_specs_from_size(size)?;
-    let body_to_send = create_body_from_specs(name, specs, &String::from(""))?;
+    let body_to_send =
+        create_body_from_specs(name, InstanceSpecs { cpus, memory }, &String::from(""))?;
     cru_request(hostname, body_to_send)
 }
 
@@ -106,11 +105,15 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
         instances.push(Instance {
             machine_id: machine.id.clone(),
             name: machine.name.clone(),
-            size: match &machine.config.guest {
-                Some(guest) => get_size_from_cpu_count(guest.cpus)?,
-                None => String::from("none"),
+            specs: match &machine.config.guest {
+                Some(guest) => InstanceSpecs {
+                    cpus: guest.cpus,
+                    memory: guest.memory_mb,
+                },
+                None => InstanceSpecs::phony(),
             },
             region: machine.region.clone(),
+            state: parse_state(&machine.state),
         })
     }
     Ok(instances)
@@ -136,5 +139,3 @@ fn create_body_from_specs(
 
     Ok(serde_json::to_string(&body)?)
 }
-
-// need a parse error method to exract body

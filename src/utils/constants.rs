@@ -3,13 +3,34 @@ use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use std::env;
 use std::error::Error;
 
-use super::types::InstanceSpecs;
+use super::types::InstanceState;
 
-pub const POSSIBLE_SIZES: [&str; 5] = ["micro", "small", "med", "large", "xl"];
 pub const POSSIBLE_REGIONS: [&str; 17] = [
     "ams", "bom", "cdg", "dfw", "fra", "hkg", "iad", "lax", "lhr", "nrt", "ord", "scl", "sea",
     "sin", "sjc", "syd", "yyz",
 ];
+
+pub fn validate_cpu(count: &str) -> Result<u32, String> {
+    let value: u32 = count.parse().map_err(|_| "Invalid number of CPUs")?;
+
+    if value >= 1 && value <= 16 {
+        Ok(value)
+    } else {
+        Err("Number of CPUs must be between 1 and 16".to_string())
+    }
+}
+
+pub fn validate_memory(amount: &str) -> Result<u32, String> {
+    let value: u32 = amount.parse().map_err(|_| "Invalid amount of memory")?;
+
+    let rounded_value = (value + 128) / 256 * 256;
+
+    if rounded_value >= 256 && rounded_value <= 32768 {
+        Ok(rounded_value)
+    } else {
+        Err("Memory must be between 256 and 32768".to_string())
+    }
+}
 
 fn get_api_key() -> Result<String, Box<dyn Error>> {
     dotenv().ok();
@@ -49,40 +70,9 @@ pub fn get_hostname() -> Result<String, Box<dyn Error>> {
     }
 }
 
-pub fn get_size_from_cpu_count(cpus: u32) -> Result<String, String> {
-    match cpus {
-        1 => Ok(String::from("micro")),
-        2 => Ok(String::from("small")),
-        4 => Ok(String::from("med")),
-        8 => Ok(String::from("large")),
-        16 => Ok(String::from("xl")),
-        _ => Err(String::from("unknown")),
-    }
-}
-
-// haven't verified if these ratios make sense, will probably end up switching to cpus/memory
-pub fn get_specs_from_size(size: &str) -> Result<InstanceSpecs, String> {
-    match size {
-        "micro" => Ok(InstanceSpecs {
-            cpus: 1,
-            memory: 512,
-        }),
-        "small" => Ok(InstanceSpecs {
-            cpus: 2,
-            memory: 512,
-        }),
-        "med" => Ok(InstanceSpecs {
-            cpus: 4,
-            memory: 1024,
-        }),
-        "large" => Ok(InstanceSpecs {
-            cpus: 8,
-            memory: 2048,
-        }),
-        "xl" => Ok(InstanceSpecs {
-            cpus: 16,
-            memory: 4096,
-        }),
-        _ => Err(String::from("unknown size")),
+pub fn parse_state(state: &str) -> InstanceState {
+    match state {
+        "starting" | "started" => InstanceState::Running,
+        _ => InstanceState::Stopped,
     }
 }

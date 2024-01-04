@@ -1,7 +1,7 @@
-use crate::lib::constants::{POSSIBLE_REGIONS, POSSIBLE_SIZES};
+use crate::utils::constants::{validate_cpu, validate_memory, POSSIBLE_REGIONS};
 use clap::{arg, ArgMatches, Command};
 
-// changes -> switch to cpu/memory, let region be set to a default
+// todo: let region be set to a default, -q flag on new
 pub fn read_input() -> ArgMatches {
     Command::new("spec")
         .author("Tej Singh, tejfsingh@gmail.com")
@@ -13,8 +13,13 @@ pub fn read_input() -> ArgMatches {
                 .about("Create a new instance")
                 .arg(arg!(<name> "Name of instance").required(true))
                 .arg(
-                    arg!(<size> "Size of instance")
-                        .value_parser(POSSIBLE_SIZES)
+                    arg!(<cpus> "Number of CPUs (1-16)")
+                        .value_parser(validate_cpu)
+                        .required(true),
+                )
+                .arg(
+                    arg!(<memory> "Amount of memory (256 - 32768 mb)")
+                        .value_parser(validate_memory)
                         .required(true),
                 )
                 .arg(
@@ -22,15 +27,20 @@ pub fn read_input() -> ArgMatches {
                         .value_parser(POSSIBLE_REGIONS)
                         .required(true),
                 )
-                .arg_required_else_help(true),
+                .arg_required_else_help(true).after_help("Please note fly enforces cpu/memory ratios that may make your configuration invalid"),
         )
         .subcommand(
             Command::new("modify")
                 .about("Modify the configuration of an instance")
                 .arg(arg!(<name> "Name of instance").required(true))
                 .arg(
-                    arg!(<size> "Size of instance")
-                        .value_parser(POSSIBLE_SIZES)
+                    arg!(<cpus> "Number of CPUs")
+                        .value_parser(validate_cpu)
+                        .required(true),
+                )
+                .arg(
+                    arg!(<memory> "Amount of memory (mb)")
+                        .value_parser(validate_memory)
                         .required(true),
                 )
                 .arg_required_else_help(true),
