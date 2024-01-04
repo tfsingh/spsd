@@ -37,7 +37,7 @@ pub fn create_machine(
     let hostname = get_hostname()?;
     let body_to_send = create_body_from_specs(name, InstanceSpecs { cpus, memory }, region)?;
     let instance = cru_request(hostname, body_to_send)?;
-    request_stop(name, &instance.machine_id)?;
+    stop_machine(name);
     Ok(instance)
 }
 
@@ -46,7 +46,7 @@ pub fn update_machine(name: &String, cpus: u32, memory: u32) -> Result<Instance,
     let body_to_send =
         create_body_from_specs(name, InstanceSpecs { cpus, memory }, &String::from(""))?;
     let instance = cru_request(hostname, body_to_send)?;
-    request_stop(name, &instance.machine_id)?;
+    stop_machine(name);
     Ok(instance)
 }
 
