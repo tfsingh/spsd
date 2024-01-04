@@ -18,7 +18,7 @@ pub fn read_input() -> ArgMatches {
                         .required(true),
                 )
                 .arg(
-                    arg!(<region> "Region of instance")
+                    arg!(<region> "Region of instance (immutable)")
                         .value_parser(POSSIBLE_REGIONS)
                         .required(true),
                 )
@@ -31,11 +31,6 @@ pub fn read_input() -> ArgMatches {
                 .arg(
                     arg!(<size> "Size of instance")
                         .value_parser(POSSIBLE_SIZES)
-                        .required(true),
-                )
-                .arg(
-                    arg!(<region> "Region of instance")
-                        .value_parser(POSSIBLE_REGIONS)
                         .required(true),
                 )
                 .arg_required_else_help(true),

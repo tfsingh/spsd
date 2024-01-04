@@ -23,35 +23,51 @@ pub fn create_instance(
     let hostname = get_hostname()?;
     let specs = get_specs_from_size(size)?;
     let body_to_send = create_body_from_specs(name, specs, region)?;
-    make_request(hostname, body_to_send)
+    cru_request(hostname, body_to_send)
 }
 
-pub fn update_instance(
-    name: &String,
-    size: &String,
-    region: &String,
-) -> Result<Instance, Box<dyn Error>> {
-    let hostname = get_hostname()? + &get_instance_id_from_name(&name)?;
+pub fn update_instance(name: &String, size: &String) -> Result<Instance, Box<dyn Error>> {
+    let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
     let specs = get_specs_from_size(size)?;
-    let body_to_send = create_body_from_specs(name, specs, region)?;
-    make_request(hostname, body_to_send)
+    let body_to_send = create_body_from_specs(name, specs, &String::from(""))?;
+    cru_request(hostname, body_to_send)
 }
 
-pub fn delete_instance(name: &String) -> Result<Instance, Box<dyn Error>> {
-    unimplemented!()
+pub fn delete_instance(name: &String) -> Result<String, Box<dyn Error>> {
+    let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
+    request_deletion(name, &hostname)
+}
+
+#[tokio::main]
+pub async fn request_deletion(name: &String, hostname: &String) -> Result<String, Box<dyn Error>> {
+    let headers = get_headers()?;
+    let client = reqwest::Client::new();
+
+    let response = client.delete(hostname).headers(headers).send().await?;
+    let success = response.status().is_success();
+    let body = response.text().await?;
+
+    if success {
+        Ok(String::from(format!(
+            "Instance {} deleted successfully",
+            name
+        )))
+    } else {
+        Err(body.into())
+    }
 }
 
 #[tokio::main]
 pub async fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
     let headers = get_headers()?;
     let client = reqwest::Client::new();
+    let hostname = get_hostname()?;
 
-    let response = client.get(get_hostname()?).headers(headers).send().await?;
+    let response = client.get(hostname).headers(headers).send().await?;
     let success = response.status().is_success();
     let body = response.text().await?;
 
     if success {
-        println!("{:?}", body);
         let machines: Machines = serde_json::from_str(&body)?;
         let instances = parse_response_body(machines)?;
         Ok(instances)
@@ -61,21 +77,21 @@ pub async fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
 }
 
 #[tokio::main]
-async fn make_request(hostname: String, body_to_send: String) -> Result<Instance, Box<dyn Error>> {
+async fn cru_request(hostname: String, body_to_send: String) -> Result<Instance, Box<dyn Error>> {
     let headers = get_headers()?;
     let client = reqwest::Client::new();
 
     let response = client
-        .get(hostname)
+        .post(hostname)
         .headers(headers)
         .body(body_to_send)
         .send()
         .await?;
+
     let success = response.status().is_success();
     let body = response.text().await?;
 
     if success {
-        println!("{:?}", body);
         let machine: Machine = serde_json::from_str(&body)?;
         let mut instance = parse_response_body(vec![machine])?;
         Ok(instance.remove(0))
@@ -120,3 +136,5 @@ fn create_body_from_specs(
 
     Ok(serde_json::to_string(&body)?)
 }
+
+// need a parse error method to exract body

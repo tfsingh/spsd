@@ -8,12 +8,27 @@ fn main() {
     let command = cli::arg_parsing::read_input();
 
     match command.subcommand() {
-        Some(("new", args)) => handle_command_with_all(args, |name, size, region| {
-            cmd::new::create_new_instance(name, size, region)
-        }),
-        Some(("modify", args)) => handle_command_with_all(args, |name, size, region| {
-            cmd::modify::modify_instance(name, size, region)
-        }),
+        Some(("new", args)) => {
+            let name = args.try_get_one::<String>("name");
+            let size = args.try_get_one::<String>("size");
+            let region = args.try_get_one::<String>("region");
+
+            match (name, size, region) {
+                (Ok(Some(name)), Ok(Some(size)), Ok(Some(region))) => {
+                    cmd::new::create_new_instance(name, size, region)
+                }
+                _ => eprintln!("Error in argument parsing"),
+            }
+        }
+        Some(("modify", args)) => {
+            let name = args.try_get_one::<String>("name");
+            let size = args.try_get_one::<String>("size");
+
+            match (name, size) {
+                (Ok(Some(name)), Ok(Some(size))) => cmd::modify::modify_instance(name, size),
+                _ => eprintln!("Error in argument parsing"),
+            }
+        }
         Some(("start", args)) => {
             handle_command_with_name(args, |name| cmd::start::start_instance(name))
         }
@@ -28,20 +43,6 @@ fn main() {
         _ => {
             eprintln!("Subcommand invalid")
         }
-    }
-}
-
-fn handle_command_with_all<F>(args: &ArgMatches, function: F)
-where
-    F: Fn(&String, &String, &String),
-{
-    let name = args.try_get_one::<String>("name");
-    let size = args.try_get_one::<String>("size");
-    let region = args.try_get_one::<String>("region");
-
-    match (name, size, region) {
-        (Ok(Some(name)), Ok(Some(size)), Ok(Some(region))) => function(&name, &size, &region),
-        _ => eprintln!("Error in argument parsing"),
     }
 }
 
