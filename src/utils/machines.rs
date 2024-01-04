@@ -14,7 +14,21 @@ fn get_instance_id_from_name(name: &String) -> Result<String, Box<dyn Error>> {
     Ok(id.ok_or("Instance not found")?)
 }
 
-pub fn create_instance(
+pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
+    let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)? + "/stop";
+    request_stop(name, &hostname)
+}
+
+pub fn start_machine(name: &String) -> Result<String, Box<dyn Error>> {
+    let instance_id = get_instance_id_from_name(&name)?;
+    let hostname = get_hostname()? + "/" + &instance_id + "/start";
+    match request_start(name, &hostname) {
+        Ok(_) => Ok(instance_id),
+        Err(error) => Err(error),
+    }
+}
+
+pub fn create_machine(
     name: &String,
     cpus: u32,
     memory: u32,
@@ -22,19 +36,61 @@ pub fn create_instance(
 ) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()?;
     let body_to_send = create_body_from_specs(name, InstanceSpecs { cpus, memory }, region)?;
-    cru_request(hostname, body_to_send)
+    let instance = cru_request(hostname, body_to_send)?;
+    request_stop(name, &instance.machine_id)?;
+    Ok(instance)
 }
 
-pub fn update_instance(name: &String, cpus: u32, memory: u32) -> Result<Instance, Box<dyn Error>> {
+pub fn update_machine(name: &String, cpus: u32, memory: u32) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
     let body_to_send =
         create_body_from_specs(name, InstanceSpecs { cpus, memory }, &String::from(""))?;
-    cru_request(hostname, body_to_send)
+    let instance = cru_request(hostname, body_to_send)?;
+    request_stop(name, &instance.machine_id)?;
+    Ok(instance)
 }
 
-pub fn delete_instance(name: &String) -> Result<String, Box<dyn Error>> {
+pub fn delete_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
     request_deletion(name, &hostname)
+}
+
+#[tokio::main]
+pub async fn request_start(name: &String, hostname: &String) -> Result<String, Box<dyn Error>> {
+    let headers = get_headers()?;
+    let client = reqwest::Client::new();
+
+    let response = client.post(hostname).headers(headers).send().await?;
+    let success = response.status().is_success();
+    let body = response.text().await?;
+
+    if success {
+        Ok(String::from(format!(
+            "Instance {} started successfully",
+            name
+        )))
+    } else {
+        Err(body.into())
+    }
+}
+
+#[tokio::main]
+pub async fn request_stop(name: &String, hostname: &String) -> Result<String, Box<dyn Error>> {
+    let headers = get_headers()?;
+    let client = reqwest::Client::new();
+
+    let response = client.post(hostname).headers(headers).send().await?;
+    let success = response.status().is_success();
+    let body = response.text().await?;
+
+    if success {
+        Ok(String::from(format!(
+            "Instance {} stopped successfully",
+            name
+        )))
+    } else {
+        Err(body.into())
+    }
 }
 
 #[tokio::main]
@@ -128,6 +184,12 @@ fn create_body_from_specs(
         "name": name,
         "region" : region,
         "config": {
+            "init": {
+                "exec": [
+                    "/bin/sleep",
+                    "inf"
+                ]
+            },
             "image": "registry-1.docker.io/library/ubuntu:latest",
             "guest": {
                 "cpu_kind": "shared",

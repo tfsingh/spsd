@@ -4,6 +4,6 @@ pub fn create_new_instance(name: &String, cpus: u32, memory: u32, region: &Strin
     // todo: figure out volumes and state persistence
     println!(
         "{:?}",
-        utils::instances::create_instance(name, cpus, memory, region)
+        utils::machines::create_machine(name, cpus, memory, region)
     );
 }

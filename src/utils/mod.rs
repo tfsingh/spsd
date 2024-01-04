@@ -1,3 +1,3 @@
 pub mod constants;
-pub mod instances;
+pub mod machines;
 pub mod types;
