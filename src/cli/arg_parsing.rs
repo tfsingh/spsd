@@ -1,4 +1,4 @@
-use crate::utils::constants::{validate_cpu, validate_disk, validate_memory, POSSIBLE_REGIONS};
+use crate::utils::constants::{validate_cpu, validate_memory, validate_volume, POSSIBLE_REGIONS};
 use clap::{arg, ArgMatches, Command};
 
 // todo: let region be set to a default, -q flag on new
@@ -23,7 +23,7 @@ pub fn read_input() -> ArgMatches {
                     arg!(<memory> "Amount of memory (256 - 32768 mb)")
                         .value_parser(validate_memory)
                         .required(true),
-                ).arg(arg!(<volume> "Size of volume (1-500gb, immutable)").value_parser(validate_disk).required(true))
+                ).arg(arg!(<volume> "Size of volume (1-500gb, immutable)").value_parser(validate_volume).required(true))
                 .arg(
                     arg!(<region> "Region of instance (immutable)")
                         .value_parser(POSSIBLE_REGIONS)

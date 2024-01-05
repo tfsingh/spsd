@@ -32,13 +32,13 @@ pub fn validate_memory(amount: &str) -> Result<u32, String> {
     }
 }
 
-pub fn validate_disk(size: &str) -> Result<u32, String> {
+pub fn validate_volume(size: &str) -> Result<u32, String> {
     let value: u32 = size.parse().map_err(|_| "Invalid volume size")?;
 
     if value >= 1 && value <= 50 {
         Ok(value)
     } else {
-        Err("Size of volume must be between 1 and 50 gb".to_string())
+        Err("Size of volume must be between 1 and 500 gb".to_string())
     }
 }
 
