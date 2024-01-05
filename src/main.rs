@@ -4,6 +4,7 @@ mod cli;
 mod commands;
 mod utils;
 
+// todo: need to edit instance struct to include volume size, need to need to create/destroy volumes when asked
 fn main() {
     let command = cli::arg_parsing::read_input();
 
@@ -12,13 +13,18 @@ fn main() {
             let name = args.try_get_one::<String>("name");
             let cpus = args.try_get_one::<u32>("cpus");
             let memory = args.try_get_one::<u32>("memory");
+            let volume = args.try_get_one::<u32>("volume");
             let region = args.try_get_one::<String>("region");
 
-            match (name, cpus, memory, region) {
-                (Ok(Some(name)), Ok(Some(cpus)), Ok(Some(memory)), Ok(Some(region))) => {
-                    commands::new::create_new_instance(name, *cpus, *memory, region)
-                }
-                (name, cpus, memory, region) => {
+            match (name, cpus, memory, volume, region) {
+                (
+                    Ok(Some(name)),
+                    Ok(Some(cpus)),
+                    Ok(Some(memory)),
+                    Ok(Some(volume)),
+                    Ok(Some(region)),
+                ) => commands::new::create_new_instance(name, *cpus, *memory, *volume, region),
+                (name, cpus, memory, volume, region) => {
                     eprintln!(
                         "Error in argument parsing: name={:?}, cpus={:?}, memory={:?}, region={:?}",
                         name, cpus, memory, region

@@ -32,6 +32,7 @@ pub fn create_machine(
     name: &String,
     cpus: u32,
     memory: u32,
+    volume: u32,
     region: &String,
 ) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()?;
@@ -175,6 +176,7 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
     Ok(instances)
 }
 
+// todo: add in params for state persistence, and request for volume
 fn create_body_from_specs(
     name: &String,
     specs: InstanceSpecs,
@@ -195,7 +197,17 @@ fn create_body_from_specs(
                 "cpu_kind": "shared",
                 "cpus": specs.cpus,
                 "memory_mb": specs.memory
-            }
+            },
+            "mounts": [
+                {
+                    "encrypted": true,
+                    "name": "test_volume",
+                    "path": "/data",
+                    "size_gb": 50,
+                    "size_gb_limit": 500,
+                    "volume": "vol_p4mmzwx7md9958d4"
+                }
+            ]
         }
     });
 

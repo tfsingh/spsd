@@ -1,7 +1,9 @@
-use crate::utils::constants::{validate_cpu, validate_memory, POSSIBLE_REGIONS};
+use crate::utils::constants::{validate_cpu, validate_disk, validate_memory, POSSIBLE_REGIONS};
 use clap::{arg, ArgMatches, Command};
 
 // todo: let region be set to a default, -q flag on new
+// https://gist.github.com/cbzehner/dede31dc0b4617fd4abaff9e03b15f9e
+// https://github.com/clap-rs/clap/issues/1634
 pub fn read_input() -> ArgMatches {
     Command::new("spec")
         .author("Tej Singh, tejfsingh@gmail.com")
@@ -21,7 +23,7 @@ pub fn read_input() -> ArgMatches {
                     arg!(<memory> "Amount of memory (256 - 32768 mb)")
                         .value_parser(validate_memory)
                         .required(true),
-                )
+                ).arg(arg!(<volume> "Size of volume (1-500gb, immutable)").value_parser(validate_disk).required(true))
                 .arg(
                     arg!(<region> "Region of instance (immutable)")
                         .value_parser(POSSIBLE_REGIONS)
