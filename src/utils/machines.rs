@@ -133,6 +133,7 @@ pub async fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
 }
 
 #[tokio::main]
+// todo: refactor to be post_request, just implementa phony instance to send back as ok for start/stop case
 async fn cru_request(hostname: String, body_to_send: String) -> Result<Instance, Box<dyn Error>> {
     let headers = get_headers()?;
     let client = reqwest::Client::new();
