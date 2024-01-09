@@ -176,7 +176,8 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
     Ok(instances)
 }
 
-// todo: add in params for state persistence, and request for volume
+// todo: add in params for state persistence, request for volume,
+// and implement a better way to keep the machine alive on startup
 fn create_body_from_specs(
     name: &String,
     specs: InstanceSpecs,
