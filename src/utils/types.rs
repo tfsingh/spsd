@@ -11,6 +11,18 @@ pub struct Instance {
     pub state: InstanceState,
 }
 
+impl Instance {
+    pub fn phony() -> Self {
+        Self {
+            machine_id: String::from(""),
+            name: String::from(""),
+            specs: InstanceSpecs::phony(),
+            region: String::from(""),
+            state: InstanceState::Stopped,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct InstanceSpecs {
     pub cpus: u32,

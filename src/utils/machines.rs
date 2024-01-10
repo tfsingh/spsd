@@ -2,6 +2,7 @@ use crate::utils::types::{Machine, Machines};
 
 use super::constants::{get_headers, get_hostname, parse_state};
 use super::types::{Instance, InstanceSpecs};
+use serde_json::Value;
 use std::error::Error;
 use tokio;
 
@@ -14,15 +15,15 @@ fn get_instance_id_from_name(name: &String) -> Result<String, Box<dyn Error>> {
     Ok(id.ok_or("Instance not found")?)
 }
 
-pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
+pub fn stop_machine(name: &String) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)? + "/stop";
-    request_stop(name, &hostname)
+    post_request(hostname, String::from(""), false)
 }
 
 pub fn start_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let instance_id = get_instance_id_from_name(&name)?;
     let hostname = get_hostname()? + "/" + &instance_id + "/start";
-    match request_start(name, &hostname) {
+    match post_request(hostname, String::from(""), false) {
         Ok(_) => Ok(instance_id),
         Err(error) => Err(error),
     }
@@ -37,7 +38,7 @@ pub fn create_machine(
 ) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()?;
     let body_to_send = create_body_from_specs(name, InstanceSpecs { cpus, memory }, region)?;
-    let instance = cru_request(hostname, body_to_send)?;
+    let instance = post_request(hostname, body_to_send, true)?;
     stop_machine(name);
     Ok(instance)
 }
@@ -46,7 +47,7 @@ pub fn update_machine(name: &String, cpus: u32, memory: u32) -> Result<Instance,
     let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
     let body_to_send =
         create_body_from_specs(name, InstanceSpecs { cpus, memory }, &String::from(""))?;
-    let instance = cru_request(hostname, body_to_send)?;
+    let instance = post_request(hostname, body_to_send, true)?;
     stop_machine(name);
     Ok(instance)
 }
@@ -54,44 +55,6 @@ pub fn update_machine(name: &String, cpus: u32, memory: u32) -> Result<Instance,
 pub fn delete_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
     request_deletion(name, &hostname)
-}
-
-#[tokio::main]
-pub async fn request_start(name: &String, hostname: &String) -> Result<String, Box<dyn Error>> {
-    let headers = get_headers()?;
-    let client = reqwest::Client::new();
-
-    let response = client.post(hostname).headers(headers).send().await?;
-    let success = response.status().is_success();
-    let body = response.text().await?;
-
-    if success {
-        Ok(String::from(format!(
-            "Instance {} started successfully",
-            name
-        )))
-    } else {
-        Err(body.into())
-    }
-}
-
-#[tokio::main]
-pub async fn request_stop(name: &String, hostname: &String) -> Result<String, Box<dyn Error>> {
-    let headers = get_headers()?;
-    let client = reqwest::Client::new();
-
-    let response = client.post(hostname).headers(headers).send().await?;
-    let success = response.status().is_success();
-    let body = response.text().await?;
-
-    if success {
-        Ok(String::from(format!(
-            "Instance {} stopped successfully",
-            name
-        )))
-    } else {
-        Err(body.into())
-    }
 }
 
 #[tokio::main]
@@ -128,13 +91,17 @@ pub async fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
         let instances = parse_response_body(machines)?;
         Ok(instances)
     } else {
-        Err(body.into())
+        let error: Value = serde_json::from_str(&body)?;
+        Err(error.to_string().into())
     }
 }
 
 #[tokio::main]
-// todo: refactor to be post_request, just implementa phony instance to send back as ok for start/stop case
-async fn cru_request(hostname: String, body_to_send: String) -> Result<Instance, Box<dyn Error>> {
+async fn post_request(
+    hostname: String,
+    body_to_send: String,
+    expect_instance: bool,
+) -> Result<Instance, Box<dyn Error>> {
     let headers = get_headers()?;
     let client = reqwest::Client::new();
 
@@ -149,11 +116,16 @@ async fn cru_request(hostname: String, body_to_send: String) -> Result<Instance,
     let body = response.text().await?;
 
     if success {
-        let machine: Machine = serde_json::from_str(&body)?;
-        let mut instance = parse_response_body(vec![machine])?;
-        Ok(instance.remove(0))
+        if expect_instance {
+            let machine: Machine = serde_json::from_str(&body)?;
+            let mut instance = parse_response_body(vec![machine])?;
+            Ok(instance.remove(0))
+        } else {
+            Ok(Instance::phony())
+        }
     } else {
-        Err(body.into())
+        let error: Value = serde_json::from_str(&body)?;
+        Err(error.to_string().into())
     }
 }
 
