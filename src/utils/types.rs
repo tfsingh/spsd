@@ -2,34 +2,24 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Instance {
     pub machine_id: String,
+    pub volume_id: String,
     pub name: String,
     pub specs: InstanceSpecs,
     pub region: String,
     pub state: InstanceState,
 }
 
-impl Instance {
-    pub fn phony() -> Self {
-        Self {
-            machine_id: String::from(""),
-            name: String::from(""),
-            specs: InstanceSpecs::phony(),
-            region: String::from(""),
-            state: InstanceState::Stopped,
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InstanceSpecs {
-    pub cpus: u32,
-    pub memory: u32,
+    pub cpu_count: u32,
+    pub memory_mb: u32,
+    pub volume_gb: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum InstanceState {
     Running,
     Stopped,
@@ -37,7 +27,11 @@ pub enum InstanceState {
 
 impl InstanceSpecs {
     pub fn phony() -> Self {
-        Self { cpus: 0, memory: 0 }
+        Self {
+            cpu_count: 0,
+            memory_mb: 0,
+            volume_gb: 0,
+        }
     }
 }
 
@@ -73,6 +67,7 @@ pub struct MachineConfig {
     pub image: String,
     pub services: Option<Vec<Service>>,
     pub metadata: Option<HashMap<String, String>>,
+    pub mounts: Vec<Mount>,
     pub restart: Option<Restart>,
     pub guest: Option<Guest>,
 }
@@ -107,4 +102,35 @@ pub struct Init {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Restart {
     pub policy: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Mount {
+    pub encrypted: bool,
+    pub path: String,
+    pub size_gb: u32,
+    pub volume: String,
+    pub name: String,
+    pub size_gb_limit: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Volume {
+    pub id: String,
+    pub name: String,
+    pub state: String,
+    pub size_gb: u32,
+    pub region: String,
+    pub zone: String,
+    pub encrypted: bool,
+    pub attached_machine_id: Option<String>,
+    pub attached_alloc_id: Option<String>,
+    pub created_at: String,
+    pub blocks: u32,
+    pub block_size: u32,
+    pub blocks_free: u32,
+    pub blocks_avail: u32,
+    pub fstype: String,
+    pub snapshot_retention: u32,
+    pub host_dedication_key: String,
 }

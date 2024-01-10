@@ -72,10 +72,7 @@ pub fn get_headers() -> Result<HeaderMap, Box<dyn Error>> {
 pub fn get_hostname() -> Result<String, Box<dyn Error>> {
     let app_name = get_app_name();
     match app_name {
-        Ok(app_name) => Ok(format!(
-            "https://api.machines.dev/v1/apps/{}/machines",
-            app_name
-        )),
+        Ok(app_name) => Ok(format!("https://api.machines.dev/v1/apps/{}", app_name)),
         Err(error) => Err(error),
     }
 }

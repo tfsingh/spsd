@@ -1,78 +1,139 @@
-use crate::utils::types::{Machine, Machines};
-
 use super::constants::{get_headers, get_hostname, parse_state};
-use super::types::{Instance, InstanceSpecs};
-use serde_json::Value;
+use super::types::{Instance, InstanceSpecs, Volume};
+use crate::utils::types::{Machine, Machines};
+use reqwest::Method;
 use std::error::Error;
+use std::{thread, time};
 use tokio;
 
-fn get_instance_id_from_name(name: &String) -> Result<String, Box<dyn Error>> {
-    let id = get_instances()?
+fn get_instance_from_name(name: &str) -> Result<Instance, Box<dyn Error>> {
+    let instances = get_instances()?;
+    let instance = instances
         .iter()
-        .find(|instance| &instance.name == name)
-        .map(|instance| instance.machine_id.clone());
+        .find(|instance| instance.name == name)
+        .cloned();
 
-    Ok(id.ok_or("Instance not found")?)
+    instance.ok_or_else(|| "Instance not found".into())
 }
 
-pub fn stop_machine(name: &String) -> Result<Instance, Box<dyn Error>> {
-    let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)? + "/stop";
-    post_request(hostname, String::from(""), false)
+pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
+    let instance_id = get_instance_from_name(&name)?.machine_id;
+    let hostname = get_hostname()? + "/machines/" + &instance_id + "/stop";
+    match make_request(Method::POST, hostname, None, false) {
+        Ok(_) => Ok(instance_id),
+        Err(error) => Err(error),
+    }
 }
 
 pub fn start_machine(name: &String) -> Result<String, Box<dyn Error>> {
-    let instance_id = get_instance_id_from_name(&name)?;
-    let hostname = get_hostname()? + "/" + &instance_id + "/start";
-    match post_request(hostname, String::from(""), false) {
+    let instance_id = get_instance_from_name(&name)?.machine_id;
+    let hostname = get_hostname()? + "/machines/" + &instance_id + "/start";
+    match make_request(Method::POST, hostname, None, false) {
         Ok(_) => Ok(instance_id),
+        Err(error) => Err(error),
+    }
+}
+
+pub fn create_volume(
+    name: &String,
+    volume_gb: u32,
+    region: &String,
+) -> Result<String, Box<dyn Error>> {
+    let hostname = get_hostname()? + "/volumes";
+    let body = serde_json::json!({"name" : name,
+                                      "region": region, 
+                                      "size_gb": volume_gb});
+    request_volume(hostname, body.to_string())
+}
+
+pub fn delete_volume(volume_id: &String) -> Result<String, Box<dyn Error>> {
+    let hostname = get_hostname()? + "/volumes/" + volume_id;
+    match make_request(Method::DELETE, hostname, None, false) {
+        Ok(_) => Ok(String::from("Volume deleted")),
         Err(error) => Err(error),
     }
 }
 
 pub fn create_machine(
     name: &String,
-    cpus: u32,
-    memory: u32,
-    volume: u32,
+    cpu_count: u32,
+    memory_mb: u32,
+    volume_gb: u32,
     region: &String,
 ) -> Result<Instance, Box<dyn Error>> {
-    let hostname = get_hostname()?;
-    let body_to_send = create_body_from_specs(name, InstanceSpecs { cpus, memory }, region)?;
-    let instance = post_request(hostname, body_to_send, true)?;
-    stop_machine(name);
-    Ok(instance)
+    let hostname = get_hostname()? + "/machines";
+    let volume_id = create_volume(name, volume_gb, region)?;
+    let body = create_body_from_specs(
+        name,
+        InstanceSpecs {
+            cpu_count,
+            memory_mb,
+            volume_gb,
+        },
+        Some(region),
+        Some(&volume_id),
+    )?;
+    let result = make_request(Method::POST, hostname, Some(body), true)?;
+
+    if let Some(instance) = result {
+        let three_seconds = time::Duration::from_secs(10); // todo: remove this hack, figure out how to keep machine up
+        thread::sleep(three_seconds);
+        stop_machine(name)?; // todo: fix this, make it properly stop
+        Ok(instance)
+    } else {
+        delete_volume(&volume_id)?;
+        Err("Error in instance creation".into())
+    }
 }
 
-pub fn update_machine(name: &String, cpus: u32, memory: u32) -> Result<Instance, Box<dyn Error>> {
-    let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
-    let body_to_send =
-        create_body_from_specs(name, InstanceSpecs { cpus, memory }, &String::from(""))?;
-    let instance = post_request(hostname, body_to_send, true)?;
-    stop_machine(name);
-    Ok(instance)
+// todo: figure out how to make api return mounts everytime
+pub fn update_machine(
+    name: &String,
+    cpu_count: u32,
+    memory_mb: u32,
+) -> Result<Instance, Box<dyn Error>> {
+    let hostname = get_hostname()? + "/machines/" + &get_instance_from_name(&name)?.machine_id;
+    let body = create_body_from_specs(
+        name,
+        InstanceSpecs {
+            cpu_count,
+            memory_mb,
+            volume_gb: 0,
+        },
+        None,
+        None,
+    )?;
+    let instance = make_request(Method::POST, hostname, Some(body), true)?;
+    stop_machine(name)?;
+    Ok(instance.expect("Error in updating of machine"))
 }
 
 pub fn delete_machine(name: &String) -> Result<String, Box<dyn Error>> {
-    let hostname = get_hostname()? + "/" + &get_instance_id_from_name(&name)?;
-    request_deletion(name, &hostname)
+    let instance = get_instance_from_name(&name)?;
+    let hostname = get_hostname()? + "/" + &instance.machine_id;
+    if let Ok(Some(_)) = make_request(Method::DELETE, hostname, None, false) {
+        delete_volume(&instance.volume_id)?;
+        Ok(String::from("Deleted"))
+    } else {
+        Err("Did not delete".into())
+    }
 }
 
 #[tokio::main]
-pub async fn request_deletion(name: &String, hostname: &String) -> Result<String, Box<dyn Error>> {
+pub async fn request_volume(hostname: String, body: String) -> Result<String, Box<dyn Error>> {
     let headers = get_headers()?;
     let client = reqwest::Client::new();
 
-    let response = client.delete(hostname).headers(headers).send().await?;
+    let request = client.post(hostname).body(body).headers(headers);
+
+    let response = request.send().await?;
     let success = response.status().is_success();
     let body = response.text().await?;
-
     if success {
-        Ok(String::from(format!(
-            "Instance {} deleted successfully",
-            name
-        )))
+        let volume: Volume = serde_json::from_str(&body)?;
+        Ok(volume.id)
     } else {
-        Err(body.into())
+        Err(body.to_string().into())
     }
 }
 
@@ -80,52 +141,49 @@ pub async fn request_deletion(name: &String, hostname: &String) -> Result<String
 pub async fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
     let headers = get_headers()?;
     let client = reqwest::Client::new();
-    let hostname = get_hostname()?;
+    let hostname = get_hostname()? + "/machines";
 
     let response = client.get(hostname).headers(headers).send().await?;
     let success = response.status().is_success();
     let body = response.text().await?;
 
     if success {
+        println!("{:?}", body);
         let machines: Machines = serde_json::from_str(&body)?;
         let instances = parse_response_body(machines)?;
         Ok(instances)
     } else {
-        let error: Value = serde_json::from_str(&body)?;
-        Err(error.to_string().into())
+        Err(body.to_string().into())
     }
 }
 
 #[tokio::main]
-async fn post_request(
+async fn make_request(
+    method: Method,
     hostname: String,
-    body_to_send: String,
-    expect_instance: bool,
-) -> Result<Instance, Box<dyn Error>> {
+    body: Option<String>,
+    expect_parseable_result: bool,
+) -> Result<Option<Instance>, Box<dyn Error>> {
     let headers = get_headers()?;
     let client = reqwest::Client::new();
-
-    let response = client
-        .post(hostname)
-        .headers(headers)
-        .body(body_to_send)
-        .send()
-        .await?;
-
+    let request = if let Some(body) = body {
+        client.request(method, hostname).body(body).headers(headers)
+    } else {
+        client.request(method, hostname).headers(headers)
+    };
+    let response = request.send().await?;
     let success = response.status().is_success();
     let body = response.text().await?;
-
     if success {
-        if expect_instance {
+        if expect_parseable_result {
             let machine: Machine = serde_json::from_str(&body)?;
             let mut instance = parse_response_body(vec![machine])?;
-            Ok(instance.remove(0))
+            Ok(Some(instance.remove(0)))
         } else {
-            Ok(Instance::phony())
+            Ok(None)
         }
     } else {
-        let error: Value = serde_json::from_str(&body)?;
-        Err(error.to_string().into())
+        Err(body.to_string().into())
     }
 }
 
@@ -134,11 +192,23 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
     for machine in machines.iter() {
         instances.push(Instance {
             machine_id: machine.id.clone(),
+            volume_id: machine
+                .config
+                .mounts
+                .get(0)
+                .map(|mount| mount.volume.clone())
+                .unwrap_or_default(),
             name: machine.name.clone(),
             specs: match &machine.config.guest {
                 Some(guest) => InstanceSpecs {
-                    cpus: guest.cpus,
-                    memory: guest.memory_mb,
+                    cpu_count: guest.cpus,
+                    memory_mb: guest.memory_mb,
+                    volume_gb: machine
+                        .config
+                        .mounts
+                        .get(0)
+                        .map(|mount| mount.size_gb)
+                        .unwrap_or_default(),
                 },
                 None => InstanceSpecs::phony(),
             },
@@ -149,16 +219,15 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
     Ok(instances)
 }
 
-// todo: add in params for state persistence, request for volume,
-// and implement a better way to keep the machine alive on startup
+// todo: implement a better way to keep the machine alive on startup
 fn create_body_from_specs(
-    name: &String,
+    name: &str,
     specs: InstanceSpecs,
-    region: &String,
+    region: Option<&String>,
+    volume_id: Option<&String>,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let body = serde_json::json!({
+    let mut body = serde_json::json!({
         "name": name,
-        "region" : region,
         "config": {
             "init": {
                 "exec": [
@@ -169,21 +238,27 @@ fn create_body_from_specs(
             "image": "registry-1.docker.io/library/ubuntu:latest",
             "guest": {
                 "cpu_kind": "shared",
-                "cpus": specs.cpus,
-                "memory_mb": specs.memory
-            },
-            "mounts": [
-                {
-                    "encrypted": true,
-                    "name": "test_volume",
-                    "path": "/data",
-                    "size_gb": 50,
-                    "size_gb_limit": 500,
-                    "volume": "vol_p4mmzwx7md9958d4"
-                }
-            ]
+                "cpus": specs.cpu_count,
+                "memory_mb": specs.memory_mb
+            }
         }
     });
+
+    if let Some(reg) = region {
+        body["region"] = serde_json::json!(reg);
+    }
+
+    if let Some(v_id) = volume_id {
+        let mounts = serde_json::json!([{
+            "encrypted": true,
+            "name": name,
+            "path": "/data",
+            "size_gb": specs.volume_gb,
+            "size_gb_limit": 500,
+            "volume": v_id
+        }]);
+        body["config"]["mounts"] = mounts;
+    }
 
     Ok(serde_json::to_string(&body)?)
 }
