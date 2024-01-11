@@ -48,3 +48,16 @@ pub fn parse_port(port: &str) -> Result<u16, String> {
         Err("Port must be between 1024 and 65535".to_string())
     }
 }
+
+pub fn parse_region(region: &str) -> Result<String, String> {
+    let allowed_regions = vec![
+        "ams", "bom", "cdg", "dfw", "fra", "hkg", "iad", "lax", "lhr", "nrt", "ord", "scl", "sea",
+        "sin", "sjc", "syd", "yyz",
+    ];
+
+    if allowed_regions.contains(&region) {
+        Ok(region.to_string())
+    } else {
+        Err("Invalid region".to_string())
+    }
+}

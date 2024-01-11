@@ -1,6 +1,7 @@
-use std::error::Error;
-
 use clap::ArgMatches;
+use cli::io::prompt_instance_creation;
+use std::error::Error;
+use utils::types::InstanceInput;
 
 mod cli;
 mod commands;
@@ -11,38 +12,47 @@ fn main() {
 
     let result: Result<String, Box<dyn Error>> = match command.subcommand() {
         Some(("new", args)) => {
-            let name = args.try_get_one::<String>("name");
-            let image = args.try_get_one::<String>("image");
-            let cpus = args.try_get_one::<u32>("cpus");
-            let memory = args.try_get_one::<u32>("memory");
-            let volume = args.try_get_one::<u32>("volume");
-            let region = args.try_get_one::<String>("region");
-            let port = args.try_get_one::<u16>("port");
+            let name = args.try_get_one::<String>("name").unwrap().cloned();
+            let image = args.try_get_one::<String>("image").unwrap().cloned();
+            let cpus = args.try_get_one::<u32>("cpus").unwrap().cloned();
+            let memory = args.try_get_one::<u32>("memory").unwrap().cloned();
+            let volume = args.try_get_one::<u32>("volume").unwrap().cloned();
+            let region = args.try_get_one::<String>("region").unwrap().cloned();
+            let port = args.try_get_one::<u16>("port").unwrap().cloned();
 
-            match (name, image, cpus, memory, volume, region, port) {
+            let instance: InstanceInput = InstanceInput {
+                name,
+                image,
+                cpus,
+                memory,
+                volume,
+                region,
+                port,
+            };
+
+            let instance = prompt_instance_creation(instance);
+
+            match (
+                instance.name,
+                instance.image,
+                instance.cpus,
+                instance.memory,
+                instance.volume,
+                instance.region,
+                instance.port,
+            ) {
                 (
-                    Ok(Some(name)),
-                    Ok(Some(image)),
-                    Ok(Some(cpus)),
-                    Ok(Some(memory)),
-                    Ok(Some(volume)),
-                    Ok(Some(region)),
-                    Ok(port),
+                    Some(name),
+                    Some(image),
+                    Some(cpus),
+                    Some(memory),
+                    Some(volume),
+                    Some(region),
+                    port,
                 ) => commands::new::create_new_instance(
-                    name,
-                    image,
-                    *cpus,
-                    *memory,
-                    *volume,
-                    region,
-                    port.copied(),
+                    &name, &image, cpus, memory, volume, &region, port,
                 ),
-                (name, image, cpus, memory, volume, region, port) => {
-                    Err(format!(
-                        "Error in argument parsing: name={:?}, image={:?}, cpus={:?}, memory={:?}, volume={:?}, region={:?}, port={:?}",
-                        name, image, cpus, memory, volume, region, port).into()
-                    )
-                }
+                _ => Err("Error in argument parsing, use -h to see valid values".into()),
             }
         }
 

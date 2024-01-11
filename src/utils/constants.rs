@@ -3,11 +3,6 @@ use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use std::env;
 use std::error::Error;
 
-pub const POSSIBLE_REGIONS: [&str; 17] = [
-    "ams", "bom", "cdg", "dfw", "fra", "hkg", "iad", "lax", "lhr", "nrt", "ord", "scl", "sea",
-    "sin", "sjc", "syd", "yyz",
-];
-
 fn get_api_key() -> Result<String, Box<dyn Error>> {
     dotenv().ok();
 

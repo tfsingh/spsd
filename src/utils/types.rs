@@ -1,3 +1,4 @@
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -12,6 +13,31 @@ pub struct Instance {
     pub region: String,
     pub port: Option<u16>,
     pub state: InstanceState,
+}
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+pub struct InstanceInput {
+    #[clap(short, long)]
+    pub name: Option<String>,
+
+    #[clap(short, long)]
+    pub image: Option<String>,
+
+    #[clap(short, long)]
+    pub cpus: Option<u32>,
+
+    #[clap(short, long)]
+    pub memory: Option<u32>,
+
+    #[clap(short, long)]
+    pub volume: Option<u32>,
+
+    #[clap(short, long)]
+    pub region: Option<String>,
+
+    #[clap(short, long)]
+    pub port: Option<u16>,
 }
 
 #[derive(Debug, Clone)]
