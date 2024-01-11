@@ -49,6 +49,7 @@ pub fn delete_volume(volume_id: &str) -> Result<String, Box<dyn Error>> {
     }
 }
 
+// can make optimizations here to reduce number of requests
 pub fn create_machine(
     name: &str,
     image: &str,
@@ -58,6 +59,9 @@ pub fn create_machine(
     region: &str,
     port: Option<u16>,
 ) -> Result<Instance, Box<dyn Error>> {
+    if port.is_some() {
+        ensure_port_is_unique(port)?;
+    }
     let hostname = get_hostname()? + "/machines";
     let volume_id = create_volume(name, volume_gb, region)?;
     let body = create_body_from_specs(
@@ -237,4 +241,12 @@ fn get_instance_from_name(name: &str) -> Result<Instance, Box<dyn Error>> {
         .cloned();
 
     instance.ok_or_else(|| "Instance not found".into())
+}
+
+fn ensure_port_is_unique(port: Option<u16>) -> Result<(), Box<dyn Error>> {
+    let instances = get_instances()?;
+    if instances.iter().any(|instance| instance.port == port) {
+        return Err("Instance port is not unique".into());
+    }
+    Ok(())
 }
