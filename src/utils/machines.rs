@@ -1,7 +1,9 @@
 use super::constants::{get_headers, get_hostname, parse_state};
 use super::types::{Instance, InstanceSpecs, Volume};
 use crate::utils::types::{Machine, Machines};
-use reqwest::Method;
+use reqwest::{Client, Method};
+use serde::de::DeserializeOwned;
+use serde_json::Value;
 use std::error::Error;
 use std::{thread, time};
 use tokio;
@@ -19,7 +21,7 @@ fn get_instance_from_name(name: &str) -> Result<Instance, Box<dyn Error>> {
 pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let instance_id = get_instance_from_name(&name)?.machine_id;
     let hostname = get_hostname()? + "/machines/" + &instance_id + "/stop";
-    match make_request(Method::POST, hostname, None, false) {
+    match make_request::<Value>(Method::POST, hostname, None) {
         Ok(_) => Ok(instance_id),
         Err(error) => Err(error),
     }
@@ -28,7 +30,7 @@ pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
 pub fn start_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let instance_id = get_instance_from_name(&name)?.machine_id;
     let hostname = get_hostname()? + "/machines/" + &instance_id + "/start";
-    match make_request(Method::POST, hostname, None, false) {
+    match make_request::<Value>(Method::POST, hostname, None) {
         Ok(_) => Ok(instance_id),
         Err(error) => Err(error),
     }
@@ -43,12 +45,17 @@ pub fn create_volume(
     let body = serde_json::json!({"name" : name,
                                       "region": region, 
                                       "size_gb": volume_gb});
-    request_volume(hostname, body.to_string())
+    let volume = make_request::<Volume>(Method::POST, hostname, Some(body.to_string()))?;
+    if let Some(volume) = volume {
+        Ok(volume.id)
+    } else {
+        Err("Error in creation of volume".into())
+    }
 }
 
 pub fn delete_volume(volume_id: &String) -> Result<String, Box<dyn Error>> {
     let hostname = get_hostname()? + "/volumes/" + volume_id;
-    match make_request(Method::DELETE, hostname, None, false) {
+    match make_request::<Value>(Method::DELETE, hostname, None) {
         Ok(_) => Ok(String::from("Volume deleted")),
         Err(error) => Err(error),
     }
@@ -73,11 +80,12 @@ pub fn create_machine(
         Some(region),
         Some(&volume_id),
     )?;
-    let result = make_request(Method::POST, hostname, Some(body), true)?;
+    let machine = make_request::<Machine>(Method::POST, hostname, Some(body))?;
 
-    if let Some(instance) = result {
-        let three_seconds = time::Duration::from_secs(10); // todo: remove this hack, figure out how to keep machine up
-        thread::sleep(three_seconds);
+    if let Some(instance) = machine {
+        let instance = parse_response_body(vec![instance])?.remove(0);
+        // todo: remove this hack, figure out how to keep machine up without sleep config
+        thread::sleep(time::Duration::from_secs(10));
         stop_machine(name)?;
         Ok(instance)
     } else {
@@ -103,15 +111,18 @@ pub fn update_machine(
         None,
         None,
     )?;
-    let instance = make_request(Method::POST, hostname, Some(body), true)?;
+    let machine = make_request::<Machine>(Method::POST, hostname, Some(body))?;
+    let machine = machine.unwrap();
+    let instance = parse_response_body(vec![machine])?.remove(0);
     stop_machine(name)?;
-    Ok(instance.expect("Error in updating of machine"))
+    Ok(instance)
 }
 
 pub fn delete_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let instance = get_instance_from_name(&name)?;
-    let hostname = get_hostname()? + "/" + &instance.machine_id;
-    if let Ok(Some(_)) = make_request(Method::DELETE, hostname, None, false) {
+    let hostname = get_hostname()? + "/machines/" + &instance.machine_id;
+    let result = make_request::<Value>(Method::DELETE, hostname, None)?;
+    if let Some(_) = result {
         delete_volume(&instance.volume_id)?;
         Ok(String::from("Deleted"))
     } else {
@@ -119,70 +130,36 @@ pub fn delete_machine(name: &String) -> Result<String, Box<dyn Error>> {
     }
 }
 
-#[tokio::main]
-pub async fn request_volume(hostname: String, body: String) -> Result<String, Box<dyn Error>> {
-    let headers = get_headers()?;
-    let client = reqwest::Client::new();
-
-    let request = client.post(hostname).body(body).headers(headers);
-
-    let response = request.send().await?;
-    let success = response.status().is_success();
-    let body = response.text().await?;
-    if success {
-        let volume: Volume = serde_json::from_str(&body)?;
-        Ok(volume.id)
-    } else {
-        Err(body.to_string().into())
-    }
-}
-
-#[tokio::main]
-pub async fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
-    let headers = get_headers()?;
-    let client = reqwest::Client::new();
+pub fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
     let hostname = get_hostname()? + "/machines";
-
-    let response = client.get(hostname).headers(headers).send().await?;
-    let success = response.status().is_success();
-    let body = response.text().await?;
-
-    if success {
-        let machines: Machines = serde_json::from_str(&body)?;
-        let instances = parse_response_body(machines)?;
-        Ok(instances)
-    } else {
-        Err(body.to_string().into())
-    }
+    let machines = make_request::<Machines>(Method::GET, hostname, None)?;
+    let instances = parse_response_body(machines.unwrap());
+    instances
 }
 
 #[tokio::main]
-async fn make_request(
+pub async fn make_request<T: DeserializeOwned>(
     method: Method,
     hostname: String,
     body: Option<String>,
-    expect_parseable_result: bool,
-) -> Result<Option<Instance>, Box<dyn Error>> {
+) -> Result<Option<T>, Box<dyn Error>> {
     let headers = get_headers()?;
-    let client = reqwest::Client::new();
-    let request = if let Some(body) = body {
-        client.request(method, hostname).body(body).headers(headers)
-    } else {
-        client.request(method, hostname).headers(headers)
-    };
+    let client = Client::new();
+    let mut request = client.request(method, &hostname).headers(headers);
+
+    if let Some(b) = body {
+        request = request.body(b);
+    }
+
     let response = request.send().await?;
     let success = response.status().is_success();
-    let body = response.text().await?;
+    let response_body = response.text().await?;
+
     if success {
-        if expect_parseable_result {
-            let machine: Machine = serde_json::from_str(&body)?;
-            let mut instance = parse_response_body(vec![machine])?;
-            Ok(Some(instance.remove(0)))
-        } else {
-            Ok(None)
-        }
+        let parsed_response: T = serde_json::from_str(&response_body)?;
+        Ok(Some(parsed_response))
     } else {
-        Err(body.to_string().into())
+        Err(response_body.into())
     }
 }
 
@@ -218,7 +195,6 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
     Ok(instances)
 }
 
-// todo: implement a better way to keep the machine alive on startup
 fn create_body_from_specs(
     name: &str,
     specs: InstanceSpecs,
