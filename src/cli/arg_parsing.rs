@@ -1,6 +1,5 @@
-use crate::utils::constants::{
-    validate_cpu, validate_memory, validate_port, validate_volume, POSSIBLE_REGIONS,
-};
+use super::parsers;
+use crate::utils::constants::POSSIBLE_REGIONS;
 use clap::{arg, ArgMatches, Command};
 
 // todo: let region be set to a default, -q flag on new
@@ -16,39 +15,26 @@ pub fn read_input() -> ArgMatches {
             Command::new("new")
                 .about("Create a new instance")
                 .arg(arg!(<name> "Name of instance").required(true))
+                .arg(arg!(<image> "Url of image (\"base\" for docker-python)")
+                        .value_parser(parsers::parse_image)
+                        .required(true))
                 .arg(
                     arg!(<cpus> "Number of CPUs (1-16)")
-                        .value_parser(validate_cpu)
+                        .value_parser(parsers::parse_cpu)
                         .required(true),
                 )
                 .arg(
                     arg!(<memory> "Amount of memory (256 - 32768 mb)")
-                        .value_parser(validate_memory)
+                        .value_parser(parsers::parse_memory)
                         .required(true),
-                ).arg(arg!(<volume> "Size of volume (1-500 gb)").value_parser(validate_volume).required(true))
+                ).arg(arg!(<volume> "Size of volume (1-500 gb)").value_parser(parsers::parse_volume).required(true))
                 .arg(
                     arg!(<region> "Region of instance")
                         .value_parser(POSSIBLE_REGIONS)
                         .required(true),
-                ).arg(arg!(<port> "Local port to expose (optional)").value_parser(validate_port))
+                ).arg(arg!(<port> "Local port to expose (optional)").value_parser(parsers::parse_port))
                 .after_help("Please note fly enforces cpu/memory ratios that may make your configuration invalid"),
-        )/*
-        .subcommand(
-            Command::new("modify")
-                .about("Modify the configuration of an instance")
-                .arg(arg!(<name> "Name of instance").required(true))
-                .arg(
-                    arg!(<cpus> "Number of CPUs")
-                        .value_parser(validate_cpu)
-                        .required(true),
-                )
-                .arg(
-                    arg!(<memory> "Amount of memory (mb)")
-                        .value_parser(validate_memory)
-                        .required(true),
-                )
-                .arg_required_else_help(true),
-        )*/
+        )
         .subcommand(
             Command::new("start")
                 .about("Start an instance")

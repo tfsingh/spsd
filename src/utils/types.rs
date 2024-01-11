@@ -54,11 +54,11 @@ pub struct Machine {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ImageRef {
-    pub registry: String,
-    pub repository: String,
-    pub tag: String,
-    pub digest: String,
-    pub labels: HashMap<String, String>,
+    pub registry: Option<String>,
+    pub repository: Option<String>,
+    pub tag: Option<String>,
+    pub digest: Option<String>,
+    pub labels: Option<HashMap<String, String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

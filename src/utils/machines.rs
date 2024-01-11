@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::error::Error;
 use tokio;
 
-pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
+pub fn stop_machine(name: &str) -> Result<String, Box<dyn Error>> {
     let instance_id = get_instance_from_name(&name)?.machine_id;
     let hostname = get_hostname()? + "/machines/" + &instance_id + "/stop";
     match make_request::<Value>(Method::POST, hostname, None) {
@@ -16,7 +16,7 @@ pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
     }
 }
 
-pub fn start_machine(name: &String) -> Result<String, Box<dyn Error>> {
+pub fn start_machine(name: &str) -> Result<String, Box<dyn Error>> {
     let instance_id = get_instance_from_name(&name)?.machine_id;
     let hostname = get_hostname()? + "/machines/" + &instance_id + "/start";
     match make_request::<Value>(Method::POST, hostname, None) {
@@ -28,11 +28,7 @@ pub fn start_machine(name: &String) -> Result<String, Box<dyn Error>> {
     }
 }
 
-pub fn create_volume(
-    name: &String,
-    volume_gb: u32,
-    region: &String,
-) -> Result<String, Box<dyn Error>> {
+pub fn create_volume(name: &str, volume_gb: u32, region: &str) -> Result<String, Box<dyn Error>> {
     let hostname = get_hostname()? + "/volumes";
     let body = serde_json::json!({"name" : name,
                                       "region": region, 
@@ -45,7 +41,7 @@ pub fn create_volume(
     }
 }
 
-pub fn delete_volume(volume_id: &String) -> Result<String, Box<dyn Error>> {
+pub fn delete_volume(volume_id: &str) -> Result<String, Box<dyn Error>> {
     let hostname = get_hostname()? + "/volumes/" + volume_id;
     match make_request::<Value>(Method::DELETE, hostname, None) {
         Ok(_) => Ok(String::from("Volume deleted")),
@@ -54,28 +50,29 @@ pub fn delete_volume(volume_id: &String) -> Result<String, Box<dyn Error>> {
 }
 
 pub fn create_machine(
-    name: &String,
+    name: &str,
+    image: &str,
     cpu_count: u32,
     memory_mb: u32,
     volume_gb: u32,
-    region: &String,
+    region: &str,
     port: Option<u16>,
 ) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()? + "/machines";
     let volume_id = create_volume(name, volume_gb, region)?;
     let body = create_body_from_specs(
         name,
+        image,
         InstanceSpecs {
             cpu_count,
             memory_mb,
             volume_gb,
         },
-        Some(region),
-        Some(&volume_id),
+        region,
+        &volume_id,
         port,
     )?;
     let machine = make_request::<Machine>(Method::POST, hostname, Some(body))?;
-
     if let Some(instance) = machine {
         let instance = parse_response_body(vec![instance])?.remove(0);
         poll(&instance.machine_id)?;
@@ -87,33 +84,7 @@ pub fn create_machine(
     }
 }
 
-// todo: fly api is not returning mounts on update, this will work when we make it
-pub fn update_machine(
-    name: &String,
-    cpu_count: u32,
-    memory_mb: u32,
-) -> Result<Instance, Box<dyn Error>> {
-    let hostname = get_hostname()? + "/machines/" + &get_instance_from_name(&name)?.machine_id;
-    let body = create_body_from_specs(
-        name,
-        InstanceSpecs {
-            cpu_count,
-            memory_mb,
-            volume_gb: 0,
-        },
-        None,
-        None,
-        None,
-    )?;
-    let machine = make_request::<Machine>(Method::POST, hostname, Some(body))?;
-    let machine = machine.unwrap();
-    let instance = parse_response_body(vec![machine])?.remove(0);
-    poll(&instance.machine_id)?;
-    stop_machine(name)?;
-    Ok(instance)
-}
-
-pub fn delete_machine(name: &String) -> Result<String, Box<dyn Error>> {
+pub fn delete_machine(name: &str) -> Result<String, Box<dyn Error>> {
     let instance = get_instance_from_name(&name)?;
     let hostname = get_hostname()? + "/machines/" + &instance.machine_id;
     let result = make_request::<Value>(Method::DELETE, hostname, None)?;
@@ -149,7 +120,7 @@ async fn make_request<T: DeserializeOwned>(
     let response = request.send().await?;
     let success = response.status().is_success();
     let response_body = response.text().await?;
-
+    //println!("{:?}", response_body);
     if success {
         let parsed_response: T = serde_json::from_str(&response_body)?;
         Ok(Some(parsed_response))
@@ -158,7 +129,7 @@ async fn make_request<T: DeserializeOwned>(
     }
 }
 
-fn poll(instance_id: &String) -> Result<String, Box<dyn Error>> {
+fn poll(instance_id: &str) -> Result<String, Box<dyn Error>> {
     let hostname = get_hostname()? + "/machines/" + instance_id + "/wait";
     let body = serde_json::json!({"state" : "started"}).to_string();
     if let Ok(_) = make_request::<Value>(Method::GET, hostname, Some(body)) {
@@ -206,13 +177,15 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
 
 fn create_body_from_specs(
     name: &str,
+    image: &str,
     specs: InstanceSpecs,
-    region: Option<&String>,
-    volume_id: Option<&String>,
+    region: &str,
+    volume_id: &str,
     port: Option<u16>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut body = serde_json::json!({
         "name": name,
+        "region": region,
         "config": {
             "init": {
                 "exec": [
@@ -220,43 +193,28 @@ fn create_body_from_specs(
                     "inf"
                 ]
             },
-            "image": "registry-1.docker.io/library/ubuntu:latest",
+            "image": image,
             "guest": {
                 "cpu_kind": "shared",
                 "cpus": specs.cpu_count,
                 "memory_mb": specs.memory_mb
-            }
+            },
+            "mounts": [{
+                "encrypted": true,
+                "name": name,
+                "path": "/data",
+                "size_gb": specs.volume_gb,
+                "size_gb_limit": 500,
+                "volume": volume_id
+            }],
         }
     });
-
-    if let Some(reg) = region {
-        body["region"] = serde_json::json!(reg);
-    }
-
-    if let Some(v_id) = volume_id {
-        let mounts = serde_json::json!([{
-            "encrypted": true,
-            "name": name,
-            "path": "/data",
-            "size_gb": specs.volume_gb,
-            "size_gb_limit": 500,
-            "volume": v_id
-        }]);
-        body["config"]["mounts"] = mounts;
-    }
 
     if let Some(port) = port {
         body["config"]["services"] = serde_json::json!([{
             "ports": [
                 {
-                    "port": 443,
-                    "handlers": [
-                    "tls",
-                    "http"
-                    ]
-                },
-                {
-                    "port": 80,
+                    "port": port,
                     "handlers": [
                     "http"
                     ]
@@ -264,7 +222,7 @@ fn create_body_from_specs(
             ],
             "protocol": "tcp",
             "internal_port": port
-        }])
+        }]);
     }
 
     Ok(serde_json::to_string(&body)?)

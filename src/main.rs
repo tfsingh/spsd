@@ -10,15 +10,17 @@ fn main() {
     match command.subcommand() {
         Some(("new", args)) => {
             let name = args.try_get_one::<String>("name");
+            let image = args.try_get_one::<String>("image");
             let cpus = args.try_get_one::<u32>("cpus");
             let memory = args.try_get_one::<u32>("memory");
             let volume = args.try_get_one::<u32>("volume");
             let region = args.try_get_one::<String>("region");
             let port = args.try_get_one::<u16>("port");
 
-            match (name, cpus, memory, volume, region, port) {
+            match (name, image, cpus, memory, volume, region, port) {
                 (
                     Ok(Some(name)),
+                    Ok(Some(image)),
                     Ok(Some(cpus)),
                     Ok(Some(memory)),
                     Ok(Some(volume)),
@@ -26,31 +28,19 @@ fn main() {
                     Ok(port),
                 ) => commands::new::create_new_instance(
                     name,
+                    image,
                     *cpus,
                     *memory,
                     *volume,
                     region,
                     port.copied(),
                 ),
-                (name, cpus, memory, volume, region, port) => {
+                (name, image, cpus, memory, volume, region, port) => {
                     eprintln!(
-                        "Error in argument parsing: name={:?}, cpus={:?}, memory={:?}, volume={:?}, region={:?}, port={:?}",
-                        name, cpus, memory, volume, region, port
+                        "Error in argument parsing: name={:?}, image={:?}, cpus={:?}, memory={:?}, volume={:?}, region={:?}, port={:?}",
+                        name, image, cpus, memory, volume, region, port
                     );
                 }
-            }
-        }
-
-        Some(("modify", args)) => {
-            let name = args.try_get_one::<String>("name");
-            let cpus = args.try_get_one::<u32>("cpus");
-            let memory = args.try_get_one::<u32>("memory");
-
-            match (name, cpus, memory) {
-                (Ok(Some(name)), Ok(Some(cpus)), Ok(Some(memory))) => {
-                    commands::modify::modify_instance(name, *cpus, *memory)
-                }
-                _ => eprintln!("Error in argument parsing"),
             }
         }
 
@@ -79,7 +69,7 @@ fn main() {
 
 fn handle_command_with_name<F>(args: &ArgMatches, function: F)
 where
-    F: Fn(&String),
+    F: Fn(&str),
 {
     if let Ok(Some(name)) = args.try_get_one::<String>("name") {
         function(&name);
