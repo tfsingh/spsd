@@ -32,7 +32,7 @@ pub fn read_input() -> ArgMatches {
                     arg!(<region> "Region of instance")
                         .value_parser(POSSIBLE_REGIONS)
                         .required(true),
-                ).arg(arg!(<port> "Local port to expose (optional)").value_parser(value_parsers::parse_port))
+                ).arg(arg!(<port> "Local port to expose (optional)").value_parser(value_parsers::parse_port).required(false))
                 .after_help("Please note fly enforces cpu/memory ratios that may make your configuration invalid"),
         )
         .subcommand(

@@ -31,11 +31,17 @@ pub fn display_instances(instances: Vec<Instance>) {
         table.add_row(Row::new(vec![
             Cell::new(&instance.name),
             Cell::new(&instance.image),
-            Cell::new(&format!("{:?}", instance.specs.cpu_count)),
-            Cell::new(&format!("{:?} mb", instance.specs.memory_mb)),
-            Cell::new(&format!("{:?} gb", instance.specs.volume_gb)),
+            Cell::new(&format!("{}", instance.specs.cpu_count)),
+            Cell::new(&format!("{} mb", instance.specs.memory_mb)),
+            Cell::new(&format!("{} gb", instance.specs.volume_gb)),
             Cell::new(&instance.region),
-            Cell::new(&format!("{:?}", instance.port.unwrap())),
+            Cell::new(&format!(
+                "{}",
+                match instance.port {
+                    Some(port) => port.to_string(),
+                    None => String::new(),
+                }
+            )),
             Cell::new(&format!(
                 "{}",
                 match instance.state {
