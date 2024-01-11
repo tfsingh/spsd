@@ -3,8 +3,6 @@ use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use std::env;
 use std::error::Error;
 
-use super::types::InstanceState;
-
 pub const POSSIBLE_REGIONS: [&str; 17] = [
     "ams", "bom", "cdg", "dfw", "fra", "hkg", "iad", "lax", "lhr", "nrt", "ord", "scl", "sea",
     "sin", "sjc", "syd", "yyz",
@@ -42,12 +40,5 @@ pub fn get_hostname() -> Result<String, Box<dyn Error>> {
     match app_name {
         Ok(app_name) => Ok(format!("https://api.machines.dev/v1/apps/{}", app_name)),
         Err(error) => Err(error),
-    }
-}
-
-pub fn parse_state(state: &str) -> InstanceState {
-    match state {
-        "starting" | "started" => InstanceState::Running,
-        _ => InstanceState::Stopped,
     }
 }

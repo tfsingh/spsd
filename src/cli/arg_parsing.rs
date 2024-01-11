@@ -1,4 +1,4 @@
-use super::parsers;
+use super::value_parsers;
 use crate::utils::constants::POSSIBLE_REGIONS;
 use clap::{arg, ArgMatches, Command};
 
@@ -16,23 +16,23 @@ pub fn read_input() -> ArgMatches {
                 .about("Create a new instance")
                 .arg(arg!(<name> "Name of instance").required(true))
                 .arg(arg!(<image> "Url of image (\"base\" for docker-python)")
-                        .value_parser(parsers::parse_image)
+                        .value_parser(value_parsers::parse_image)
                         .required(true))
                 .arg(
                     arg!(<cpus> "Number of CPUs (1-16)")
-                        .value_parser(parsers::parse_cpu)
+                        .value_parser(value_parsers::parse_cpu)
                         .required(true),
                 )
                 .arg(
                     arg!(<memory> "Amount of memory (256 - 32768 mb)")
-                        .value_parser(parsers::parse_memory)
+                        .value_parser(value_parsers::parse_memory)
                         .required(true),
-                ).arg(arg!(<volume> "Size of volume (1-500 gb)").value_parser(parsers::parse_volume).required(true))
+                ).arg(arg!(<volume> "Size of volume (1-500 gb)").value_parser(value_parsers::parse_volume).required(true))
                 .arg(
                     arg!(<region> "Region of instance")
                         .value_parser(POSSIBLE_REGIONS)
                         .required(true),
-                ).arg(arg!(<port> "Local port to expose (optional)").value_parser(parsers::parse_port))
+                ).arg(arg!(<port> "Local port to expose (optional)").value_parser(value_parsers::parse_port))
                 .after_help("Please note fly enforces cpu/memory ratios that may make your configuration invalid"),
         )
         .subcommand(

@@ -27,6 +27,13 @@ pub enum InstanceState {
     Stopped,
 }
 
+pub fn parse_state(state: &str) -> InstanceState {
+    match state {
+        "starting" | "started" => InstanceState::Running,
+        _ => InstanceState::Stopped,
+    }
+}
+
 impl InstanceSpecs {
     pub fn phony() -> Self {
         Self {
