@@ -11,5 +11,5 @@ pub fn start_instance(name: &String) {
         .arg(instance_id)
         .spawn()
         .unwrap();
-    let asd = child.wait().unwrap();
+    let _asd = child.wait().unwrap();
 }

@@ -5,18 +5,8 @@ use reqwest::{Client, Method};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::error::Error;
-use std::{thread, time};
 use tokio;
 
-fn get_instance_from_name(name: &str) -> Result<Instance, Box<dyn Error>> {
-    let instances = get_instances()?;
-    let instance = instances
-        .iter()
-        .find(|instance| instance.name == name)
-        .cloned();
-
-    instance.ok_or_else(|| "Instance not found".into())
-}
 
 pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let instance_id = get_instance_from_name(&name)?.machine_id;
@@ -31,7 +21,10 @@ pub fn start_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let instance_id = get_instance_from_name(&name)?.machine_id;
     let hostname = get_hostname()? + "/machines/" + &instance_id + "/start";
     match make_request::<Value>(Method::POST, hostname, None) {
-        Ok(_) => Ok(instance_id),
+        Ok(_) => {
+            poll(&instance_id)?;
+            Ok(instance_id)
+        }
         Err(error) => Err(error),
     }
 }
@@ -84,9 +77,6 @@ pub fn create_machine(
 
     if let Some(instance) = machine {
         let instance = parse_response_body(vec![instance])?.remove(0);
-        // todo: remove this hack, figure out how to keep machine up without sleep config
-        thread::sleep(time::Duration::from_secs(10));
-        stop_machine(name)?;
         Ok(instance)
     } else {
         delete_volume(&volume_id)?;
@@ -114,6 +104,7 @@ pub fn update_machine(
     let machine = make_request::<Machine>(Method::POST, hostname, Some(body))?;
     let machine = machine.unwrap();
     let instance = parse_response_body(vec![machine])?.remove(0);
+    poll(&instance.machine_id)?;
     stop_machine(name)?;
     Ok(instance)
 }
@@ -138,7 +129,7 @@ pub fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
 }
 
 #[tokio::main]
-pub async fn make_request<T: DeserializeOwned>(
+async fn make_request<T: DeserializeOwned>(
     method: Method,
     hostname: String,
     body: Option<String>,
@@ -160,6 +151,16 @@ pub async fn make_request<T: DeserializeOwned>(
         Ok(Some(parsed_response))
     } else {
         Err(response_body.into())
+    }
+}
+
+fn poll(instance_id: &String) -> Result<String, Box<dyn Error>> {
+    let hostname = get_hostname()? + "/machines/" + instance_id + "/wait";
+    let body = serde_json::json!({"state" : "started"}).to_string();
+    if let Ok(_) = make_request::<Value>(Method::GET, hostname, Some(body)) {
+        Ok(String::from("Instance started"))
+    } else {
+        Err("Instance was not started".into())
     }
 }
 
@@ -236,4 +237,14 @@ fn create_body_from_specs(
     }
 
     Ok(serde_json::to_string(&body)?)
+}
+
+fn get_instance_from_name(name: &str) -> Result<Instance, Box<dyn Error>> {
+    let instances = get_instances()?;
+    let instance = instances
+        .iter()
+        .find(|instance| instance.name == name)
+        .cloned();
+
+    instance.ok_or_else(|| "Instance not found".into())
 }
