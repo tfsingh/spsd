@@ -2,8 +2,6 @@ use super::value_parsers;
 use clap::{arg, ArgMatches, Command};
 
 // todo: let region be set to a default, -q flag on new
-// https://gist.github.com/cbzehner/dede31dc0b4617fd4abaff9e03b15f9e
-// https://github.com/clap-rs/clap/issues/1634
 pub fn read_input() -> ArgMatches {
     Command::new("spec")
         .author("Tej Singh, tejfsingh@gmail.com")
@@ -36,7 +34,7 @@ pub fn read_input() -> ArgMatches {
         )
         .subcommand(
             Command::new("start")
-                .about("Start an instance")
+                .about("Start and connect to an instance")
                 .arg(arg!(<name> "Name of instance").required(true))
                 .arg_required_else_help(true),
         )
