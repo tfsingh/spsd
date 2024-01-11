@@ -7,7 +7,6 @@ use serde_json::Value;
 use std::error::Error;
 use tokio;
 
-
 pub fn stop_machine(name: &String) -> Result<String, Box<dyn Error>> {
     let instance_id = get_instance_from_name(&name)?.machine_id;
     let hostname = get_hostname()? + "/machines/" + &instance_id + "/stop";
@@ -77,6 +76,8 @@ pub fn create_machine(
 
     if let Some(instance) = machine {
         let instance = parse_response_body(vec![instance])?.remove(0);
+        poll(&instance.machine_id)?;
+        stop_machine(&instance.name)?;
         Ok(instance)
     } else {
         delete_volume(&volume_id)?;
