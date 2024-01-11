@@ -130,7 +130,19 @@ async fn make_request<T: DeserializeOwned>(
         let parsed_response: T = serde_json::from_str(&response_body)?;
         Ok(Some(parsed_response))
     } else {
-        Err(response_body.into())
+        let parsed_response: Result<Value, serde_json::Error> =
+            serde_json::from_str(&response_body);
+
+        match parsed_response {
+            Ok(value) => {
+                if let Some(error_message) = value.get("error").and_then(|v| v.as_str()) {
+                    Err(error_message.to_string().into())
+                } else {
+                    Err(response_body.into())
+                }
+            }
+            Err(_) => Err(response_body.into()),
+        }
     }
 }
 

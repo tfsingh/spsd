@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use clap::ArgMatches;
 
 mod cli;
@@ -7,7 +9,7 @@ mod utils;
 fn main() {
     let command = cli::arg_parsing::read_input();
 
-    match command.subcommand() {
+    let result: Result<String, Box<dyn Error>> = match command.subcommand() {
         Some(("new", args)) => {
             let name = args.try_get_one::<String>("name");
             let image = args.try_get_one::<String>("image");
@@ -36,10 +38,10 @@ fn main() {
                     port.copied(),
                 ),
                 (name, image, cpus, memory, volume, region, port) => {
-                    eprintln!(
+                    Err(format!(
                         "Error in argument parsing: name={:?}, image={:?}, cpus={:?}, memory={:?}, volume={:?}, region={:?}, port={:?}",
-                        name, image, cpus, memory, volume, region, port
-                    );
+                        name, image, cpus, memory, volume, region, port).into()
+                    )
                 }
             }
         }
@@ -61,19 +63,22 @@ fn main() {
         Some(("list", _)) => commands::list::list_instances(),
 
         Some(("profile", _args)) => commands::profile::modify_profile(),
-        _ => {
-            eprintln!("Subcommand invalid")
-        }
-    }
+        _ => Err("Subcommand invalid".into()),
+    };
+
+    match result {
+        Ok(message) => cli::io::display_success(&message),
+        Err(message) => cli::io::display_error(message),
+    };
 }
 
-fn handle_command_with_name<F>(args: &ArgMatches, function: F)
+fn handle_command_with_name<F>(args: &ArgMatches, function: F) -> Result<String, Box<dyn Error>>
 where
-    F: Fn(&str),
+    F: Fn(&str) -> Result<String, Box<dyn Error>>,
 {
     if let Ok(Some(name)) = args.try_get_one::<String>("name") {
-        function(&name);
+        function(&name)
     } else {
-        eprintln!("Please provide the name of the instance");
+        Err("Please provide the name of the instance".into())
     }
 }
