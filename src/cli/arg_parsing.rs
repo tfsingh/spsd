@@ -58,6 +58,11 @@ pub fn read_input() -> ArgMatches {
                 .about("Stop an instance")
                 .arg(arg!(<name> "Name of instance").required(true))
                 .arg_required_else_help(true),
+        ).subcommand(
+            Command::new("ss")
+            .about("Run an instance ephemerally")
+            .arg(arg!(<name> "Name of instance").required(true))
+            .arg_required_else_help(true),
         )
         .subcommand(
             Command::new("destroy")

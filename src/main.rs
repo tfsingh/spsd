@@ -53,6 +53,8 @@ fn main() {
             handle_command_with_name(args, |name| commands::stop::stop_instance(name))
         }
 
+        Some(("ss", args)) => handle_command_with_name(args, |name| commands::ss::ephemeral(name)),
+
         Some(("destroy", args)) => {
             handle_command_with_name(args, |name| commands::destroy::destroy_instance(name))
         }
