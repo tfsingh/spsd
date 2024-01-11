@@ -151,6 +151,7 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
                 .map(|mount| mount.volume.clone())
                 .unwrap_or_default(),
             name: machine.name.clone(),
+            image: machine.config.image.clone(),
             specs: match &machine.config.guest {
                 Some(guest) => InstanceSpecs {
                     cpu_count: guest.cpus,

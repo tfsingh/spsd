@@ -7,6 +7,7 @@ pub struct Instance {
     pub machine_id: String,
     pub volume_id: String,
     pub name: String,
+    pub image: String,
     pub specs: InstanceSpecs,
     pub region: String,
     pub port: Option<u16>,
@@ -54,8 +55,8 @@ pub struct Machine {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ImageRef {
-    pub registry: Option<String>,
-    pub repository: Option<String>,
+    pub registry: String,
+    pub repository: String,
     pub tag: Option<String>,
     pub digest: Option<String>,
     pub labels: Option<HashMap<String, String>>,
