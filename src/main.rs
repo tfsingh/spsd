@@ -14,19 +14,28 @@ fn main() {
             let memory = args.try_get_one::<u32>("memory");
             let volume = args.try_get_one::<u32>("volume");
             let region = args.try_get_one::<String>("region");
+            let port = args.try_get_one::<u16>("port");
 
-            match (name, cpus, memory, volume, region) {
+            match (name, cpus, memory, volume, region, port) {
                 (
                     Ok(Some(name)),
                     Ok(Some(cpus)),
                     Ok(Some(memory)),
                     Ok(Some(volume)),
                     Ok(Some(region)),
-                ) => commands::new::create_new_instance(name, *cpus, *memory, *volume, region),
-                (name, cpus, memory, volume, region) => {
+                    Ok(port),
+                ) => commands::new::create_new_instance(
+                    name,
+                    *cpus,
+                    *memory,
+                    *volume,
+                    region,
+                    port.copied(),
+                ),
+                (name, cpus, memory, volume, region, port) => {
                     eprintln!(
-                        "Error in argument parsing: name={:?}, cpus={:?}, memory={:?}, volume={:?}, region={:?}",
-                        name, cpus, memory, volume, region
+                        "Error in argument parsing: name={:?}, cpus={:?}, memory={:?}, volume={:?}, region={:?}, port={:?}",
+                        name, cpus, memory, volume, region, port
                     );
                 }
             }

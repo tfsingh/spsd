@@ -42,6 +42,16 @@ pub fn validate_volume(size: &str) -> Result<u32, String> {
     }
 }
 
+pub fn validate_port(port: &str) -> Result<u16, String> {
+    let value: u16 = port.parse().map_err(|_| "Invalid port")?;
+
+    if value >= 1024 && value <= 65535 {
+        Ok(value)
+    } else {
+        Err("Port must be between 1024 and 65535".to_string())
+    }
+}
+
 fn get_api_key() -> Result<String, Box<dyn Error>> {
     dotenv().ok();
 

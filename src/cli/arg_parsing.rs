@@ -1,4 +1,6 @@
-use crate::utils::constants::{validate_cpu, validate_memory, validate_volume, POSSIBLE_REGIONS};
+use crate::utils::constants::{
+    validate_cpu, validate_memory, validate_port, validate_volume, POSSIBLE_REGIONS,
+};
 use clap::{arg, ArgMatches, Command};
 
 // todo: let region be set to a default, -q flag on new
@@ -23,13 +25,13 @@ pub fn read_input() -> ArgMatches {
                     arg!(<memory> "Amount of memory (256 - 32768 mb)")
                         .value_parser(validate_memory)
                         .required(true),
-                ).arg(arg!(<volume> "Size of volume (1-500gb, immutable)").value_parser(validate_volume).required(true))
+                ).arg(arg!(<volume> "Size of volume (1-500 gb)").value_parser(validate_volume).required(true))
                 .arg(
-                    arg!(<region> "Region of instance (immutable)")
+                    arg!(<region> "Region of instance")
                         .value_parser(POSSIBLE_REGIONS)
                         .required(true),
-                )
-                .arg_required_else_help(true).after_help("Please note fly enforces cpu/memory ratios that may make your configuration invalid"),
+                ).arg(arg!(<port> "Local port to expose (optional)").value_parser(validate_port))
+                .after_help("Please note fly enforces cpu/memory ratios that may make your configuration invalid"),
         )/*
         .subcommand(
             Command::new("modify")

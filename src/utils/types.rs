@@ -9,6 +9,7 @@ pub struct Instance {
     pub name: String,
     pub specs: InstanceSpecs,
     pub region: String,
+    pub port: Option<u16>,
     pub state: InstanceState,
 }
 

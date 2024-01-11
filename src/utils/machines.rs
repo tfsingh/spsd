@@ -59,6 +59,7 @@ pub fn create_machine(
     memory_mb: u32,
     volume_gb: u32,
     region: &String,
+    port: Option<u16>,
 ) -> Result<Instance, Box<dyn Error>> {
     let hostname = get_hostname()? + "/machines";
     let volume_id = create_volume(name, volume_gb, region)?;
@@ -71,6 +72,7 @@ pub fn create_machine(
         },
         Some(region),
         Some(&volume_id),
+        port,
     )?;
     let machine = make_request::<Machine>(Method::POST, hostname, Some(body))?;
 
@@ -99,6 +101,7 @@ pub fn update_machine(
             memory_mb,
             volume_gb: 0,
         },
+        None,
         None,
         None,
     )?;
@@ -191,6 +194,10 @@ fn parse_response_body(machines: Machines) -> Result<Vec<Instance>, Box<dyn Erro
                 None => InstanceSpecs::phony(),
             },
             region: machine.region.clone(),
+            port: match &machine.config.services {
+                Some(services) => Some(services.get(0).unwrap().internal_port),
+                None => None,
+            },
             state: parse_state(&machine.state),
         })
     }
@@ -202,6 +209,7 @@ fn create_body_from_specs(
     specs: InstanceSpecs,
     region: Option<&String>,
     volume_id: Option<&String>,
+    port: Option<u16>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut body = serde_json::json!({
         "name": name,
@@ -235,6 +243,28 @@ fn create_body_from_specs(
             "volume": v_id
         }]);
         body["config"]["mounts"] = mounts;
+    }
+
+    if let Some(port) = port {
+        body["config"]["services"] = serde_json::json!([{
+            "ports": [
+                {
+                    "port": 443,
+                    "handlers": [
+                    "tls",
+                    "http"
+                    ]
+                },
+                {
+                    "port": 80,
+                    "handlers": [
+                    "http"
+                    ]
+                }
+            ],
+            "protocol": "tcp",
+            "internal_port": port
+        }])
     }
 
     Ok(serde_json::to_string(&body)?)
