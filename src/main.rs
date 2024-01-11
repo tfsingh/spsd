@@ -4,7 +4,6 @@ mod cli;
 mod commands;
 mod utils;
 
-// todo: need to edit instance struct to include volume size, need to need to create/destroy volumes when asked
 fn main() {
     let command = cli::arg_parsing::read_input();
 
@@ -26,8 +25,8 @@ fn main() {
                 ) => commands::new::create_new_instance(name, *cpus, *memory, *volume, region),
                 (name, cpus, memory, volume, region) => {
                     eprintln!(
-                        "Error in argument parsing: name={:?}, cpus={:?}, memory={:?}, region={:?}",
-                        name, cpus, memory, region
+                        "Error in argument parsing: name={:?}, cpus={:?}, memory={:?}, volume={:?}, region={:?}",
+                        name, cpus, memory, volume, region
                     );
                 }
             }
@@ -45,16 +44,21 @@ fn main() {
                 _ => eprintln!("Error in argument parsing"),
             }
         }
+
         Some(("start", args)) => {
             handle_command_with_name(args, |name| commands::start::start_instance(name))
         }
+
         Some(("stop", args)) => {
             handle_command_with_name(args, |name| commands::stop::stop_instance(name))
         }
+
         Some(("destroy", args)) => {
             handle_command_with_name(args, |name| commands::destroy::destroy_instance(name))
         }
+
         Some(("list", _)) => commands::list::list_instances(),
+
         Some(("profile", _args)) => commands::profile::modify_profile(),
         _ => {
             eprintln!("Subcommand invalid")

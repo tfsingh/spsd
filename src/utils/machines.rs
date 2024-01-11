@@ -78,7 +78,7 @@ pub fn create_machine(
     if let Some(instance) = result {
         let three_seconds = time::Duration::from_secs(10); // todo: remove this hack, figure out how to keep machine up
         thread::sleep(three_seconds);
-        stop_machine(name)?; // todo: fix this, make it properly stop
+        stop_machine(name)?;
         Ok(instance)
     } else {
         delete_volume(&volume_id)?;
@@ -86,7 +86,7 @@ pub fn create_machine(
     }
 }
 
-// todo: figure out how to make api return mounts everytime
+// todo: fly api is not returning mounts on update, this will work when we make it
 pub fn update_machine(
     name: &String,
     cpu_count: u32,
@@ -148,7 +148,6 @@ pub async fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
     let body = response.text().await?;
 
     if success {
-        println!("{:?}", body);
         let machines: Machines = serde_json::from_str(&body)?;
         let instances = parse_response_body(machines)?;
         Ok(instances)

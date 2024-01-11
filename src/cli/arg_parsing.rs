@@ -30,7 +30,7 @@ pub fn read_input() -> ArgMatches {
                         .required(true),
                 )
                 .arg_required_else_help(true).after_help("Please note fly enforces cpu/memory ratios that may make your configuration invalid"),
-        )
+        )/*
         .subcommand(
             Command::new("modify")
                 .about("Modify the configuration of an instance")
@@ -46,7 +46,7 @@ pub fn read_input() -> ArgMatches {
                         .required(true),
                 )
                 .arg_required_else_help(true),
-        )
+        )*/
         .subcommand(
             Command::new("start")
                 .about("Start an instance")
