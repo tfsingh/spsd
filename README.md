@@ -2,7 +2,7 @@
 
 spsc is a command line utility for managing state persistent, serverless devboxes. With spsc, you can spin up instances with 16 vCPUs, 32 gb of memory, and 500 gb of persistent disk in a region of your choice with a port open to the internet, in seconds.
 
-Instances are machines (Firecracker VMs) hosted by fly.io, launched from a docker image. You can bring your own or use one of the [base images]() included in spsc. 
+Instances are machines (Firecracker VMs) hosted by [fly.io](fly.io), launched from a docker image. You can bring your own or use one of the [base images](#images) included in spsc. 
 
 ## Installation
 
@@ -10,7 +10,7 @@ You can install spsc via your terminal with homebrew by running ```brew install 
 
 ## Quick start
 
-1. Navigate to fly.io, create an account, and [generate](https://fly.io/user/personal_access_tokens) an access token.
+1. Navigate to [fly.io](fly.io), create an account, and [generate](https://fly.io/user/personal_access_tokens) an access token.
 
 2. Configure your profile with ```spsc profile <API_KEY> <ALLOCATE_IP>```.
 
@@ -50,7 +50,7 @@ Please note that Fly enforces CPU/memory ratios that render your configuration i
 
 ### profile
 
-Set fly.io profile
+Set [fly.io](fly.io) profile
 
 - `api_key` — Fly API key (overwrites existing)
 - `allocate_ip` — Allocate a dedicated IPv4 address ($2/mo)
@@ -121,4 +121,4 @@ The following can be used instead of providing a concrete image url:
 
 ## Acknowledgements
 
-Thank you to Erik Bernhardsson for the [inspiration](https://twitter.com/bernhardsson/status/1543074570512617475) for spsc, [nebula](https://github.com/nebulatgs/fade) for the code used to parse responses from Fly's API, and the fly.io team for building what they have.
+Thank you to Erik Bernhardsson for the [inspiration](https://twitter.com/bernhardsson/status/1543074570512617475) for spsc, [nebula](https://github.com/nebulatgs/fade) for the code used to parse responses from Fly's API, and the [fly.io](fly.io) team for building what they have.
