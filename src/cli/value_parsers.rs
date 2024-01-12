@@ -1,10 +1,11 @@
 pub fn parse_cpu(count: &str) -> Result<u32, String> {
     let value: u32 = count.parse().map_err(|_| "Invalid number of CPUs")?;
 
-    if value >= 1 && value <= 16 {
+    let allowed_cpu_counts = vec![1, 2, 4, 8, 12, 16];
+    if allowed_cpu_counts.contains(&value) {
         Ok(value)
     } else {
-        Err("Number of CPUs must be between 1 and 16".to_string())
+        Err("Number of CPUs must be one of [1, 2, 4, 8, 12, 16]".to_string())
     }
 }
 
@@ -34,7 +35,7 @@ pub fn parse_memory(amount: &str) -> Result<u32, String> {
 pub fn parse_volume(size: &str) -> Result<u32, String> {
     let value: u32 = size.parse().map_err(|_| "Invalid volume size")?;
 
-    if value >= 1 && value <= 50 {
+    if value >= 1 && value <= 500 {
         Ok(value)
     } else {
         Err("Size of volume must be between 1 and 500 gb".to_string())

@@ -15,7 +15,7 @@ pub fn read_input() -> ArgMatches {
                         .value_parser(value_parsers::parse_image)
                         .required(false))
                 .arg(
-                    arg!(<cpus> "Number of CPUs (1-16)")
+                    arg!(<cpus> "Number of CPUs (1, 2, 4, 8, 12, 16)")
                         .value_parser(value_parsers::parse_cpu)
                         .required(false),
                 )
@@ -29,7 +29,7 @@ pub fn read_input() -> ArgMatches {
                         .value_parser(value_parsers::parse_region)
                         .required(false),
                 ).arg(arg!(<port> "Port to expose (optional)").value_parser(value_parsers::parse_port).required(false))
-                .after_help("Please note fly enforces cpu/memory ratios that render your configuration invalid"),
+                .after_help("Please note fly enforces cpu/memory ratios that may render your configuration invalid"),
         )
         .subcommand(
             Command::new("start")

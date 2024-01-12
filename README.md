@@ -1,12 +1,14 @@
 # spsd
 
+![spsd](resources/list.png)
+
 spsd is a command line utility for managing state persistent, serverless devboxes. With spsd, you can spin up instances with 16 vCPUs, 32 gb of memory, and 500 gb of persistent disk in a region of your choice with a port open to the internet, in seconds.
 
 Instances are machines (Firecracker VMs) hosted by [fly.io](fly.io), launched from a docker image. You can bring your own or use one of the [base images](#images) included in spsd. 
 
 ## Installation
 
-You can install spsd via your terminal with homebrew by running ```brew install spsd``` or from source with ```cargo install spsd```.
+You can install spsd with homebrew by running ```brew install spsd```. You can also install from source with ```cargo install spsd``` (must install flyctl in this case).
 
 ## Quick start
 
@@ -32,21 +34,19 @@ List instances (name, image, cpus, memory, region, port, state)
 
 - `ip` — List attached IPv4 addresses (optional)
 
-As a result, any data not stored on the persited volume (path /data) is trasient.
-
 ### new
 
 Create a new instance
 
 - `name` — Name of the instance
 - `image` — URL of the [image](#images)
-- `cpus` — Number of vCPUs (1-16)
+- `cpus` — Number of vCPUs (1, 2, 4, 8, 12, 16)
 - `memory` — Amount of memory (256 - 32768 MB)
 - `volume` — Size of volume (1-500 GB)
 - `region` — [Region](#regions) of the instance
 - `port` — Port to expose (optional, 1024-65536)
 
-Please note that Fly enforces CPU/memory ratios that render your configuration invalid.
+Please note that Fly enforces CPU/memory ratios that may render your configuration invalid.
 
 ### profile
 
@@ -118,4 +118,4 @@ The following can be entered as an image instead of providing a concrete url:
 
 ## Acknowledgements
 
-Thank you to Erik Bernhardsson for the [inspiration](https://twitter.com/bernhardsson/status/1543074570512617475) for spsd, [nebula](https://github.com/nebulatgs/fade) for the code used to parse responses from Fly's API, and the [fly.io](fly.io) team for building what they have.
+Thank you to Erik Bernhardsson for the [inspiration](https://twitter.com/bernhardsson/status/1543074570512617475) for spsd, nebula for the [code](https://github.com/nebulatgs/fade) used to parse responses from Fly's API, and the [fly.io](fly.io) team for building what they have.
