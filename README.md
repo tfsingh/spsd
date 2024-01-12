@@ -57,7 +57,7 @@ Set [fly.io](fly.io) profile
 
 ### sl
 
-Run an instance serverlessly
+Run an instance serverlessly (stops instance on graceful disconnection)
 
 - `name` — Name of the instance
 
