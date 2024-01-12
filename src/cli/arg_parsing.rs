@@ -2,7 +2,7 @@ use super::value_parsers;
 use clap::{arg, ArgMatches, Command};
 
 pub fn read_input() -> ArgMatches {
-    Command::new("spec")
+    Command::new("spsc")
         .author("Tej Singh, tejfsingh@gmail.com")
         .version("0.1")
         .about("An interface for managing state persistent ephermeral compute")
@@ -28,7 +28,7 @@ pub fn read_input() -> ArgMatches {
                     arg!(<region> "Region of instance")
                         .value_parser(value_parsers::parse_region)
                         .required(false),
-                ).arg(arg!(<port> "Local port to expose (optional)").value_parser(value_parsers::parse_port).required(false))
+                ).arg(arg!(<port> "Port to expose (optional)").value_parser(value_parsers::parse_port).required(false))
                 .after_help("Please note fly enforces cpu/memory ratios that render your configuration invalid"),
         )
         .subcommand(
@@ -44,7 +44,7 @@ pub fn read_input() -> ArgMatches {
                 .arg_required_else_help(true),
         ).subcommand(
             Command::new("ss")
-            .about("Run an instance ephemerally")
+            .about("Run an instance serverlessly")
             .arg(arg!(<name> "Name of instance").required(true))
             .arg_required_else_help(true),
         )
@@ -55,9 +55,9 @@ pub fn read_input() -> ArgMatches {
                 .arg_required_else_help(true),
         ).subcommand(
             Command::new("profile")
-            .about("Set fly.io profile (overwrites existing)")
-            .arg(arg!(<api_key> "Fly api key (required)").required(true))
-            .arg(arg!(<allocate_ip> "Allocate a dedicated IPv4 address ($2/mo)").required(true).value_parser(["y", "n"])))
+            .about("Set fly.io profile")
+            .arg(arg!(<api_key> "Fly api key (overwrites existing)").required(true))
+            .arg(arg!(<allocate_ip> "Allocate a dedicated IPv4 address (optional)").required(true).value_parser(["y", "n"])))
         .subcommand(
             Command::new("list")
             .about("List instances and attached IPs")

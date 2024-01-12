@@ -8,7 +8,7 @@ fn get_api_key() -> Result<String, Box<dyn Error>> {
 
     match env::var("FLY_API_KEY") {
         Ok(value) => Ok(value),
-        Err(_) => Err("FLY_API_KEY not set, please run spec profile"
+        Err(_) => Err("FLY_API_KEY not set, please run spsc profile"
             .to_string()
             .into()),
     }
@@ -19,7 +19,7 @@ pub fn get_app_name() -> Result<String, Box<dyn Error>> {
 
     match env::var("FLY_APP_NAME") {
         Ok(value) => Ok(value),
-        Err(_) => Err("FLY_APP_NAME not set, please run spec profile"
+        Err(_) => Err("FLY_APP_NAME not set, please run spsc profile"
             .to_string()
             .into()),
     }

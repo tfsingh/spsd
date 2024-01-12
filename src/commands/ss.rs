@@ -1,7 +1,7 @@
 use super::{start::start_instance, stop::stop_instance};
 use std::{error::Error, time::Instant};
 
-pub fn ephemeral(name: &str) -> Result<String, Box<dyn Error>> {
+pub fn serverless(name: &str) -> Result<String, Box<dyn Error>> {
     let start_time = Instant::now();
 
     start_instance(name)?;
