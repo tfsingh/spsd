@@ -8,7 +8,7 @@ Instances are machines (Firecracker VMs) hosted by [fly.io](fly.io), launched fr
 
 ## Installation
 
-You can install spsd with homebrew by running ```brew install spsd```. You can also install from source with ```cargo install spsd``` (must install flyctl in this case).
+You can install spsd with homebrew by running ```brew tap tfsingh/spsd && brew install spsd```. You can also install from source with ```cargo install spsd``` (must install flyctl in this case).
 
 ## Quick start
 
