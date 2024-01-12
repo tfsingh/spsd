@@ -6,6 +6,7 @@ use std::process::Command;
 
 pub fn list_instances(list_ips: bool) -> Result<String, Box<dyn Error>> {
     if list_ips {
+        println!("");
         let mut child = Command::new("flyctl")
             .arg("ip")
             .arg("list")

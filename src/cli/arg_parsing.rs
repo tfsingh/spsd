@@ -43,7 +43,7 @@ pub fn read_input() -> ArgMatches {
                 .arg(arg!(<name> "Name of instance").required(true))
                 .arg_required_else_help(true),
         ).subcommand(
-            Command::new("ss")
+            Command::new("sl")
             .about("Run an instance serverlessly")
             .arg(arg!(<name> "Name of instance").required(true))
             .arg_required_else_help(true),

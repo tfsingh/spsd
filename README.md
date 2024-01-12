@@ -16,7 +16,7 @@ You can install spsc via your terminal with homebrew by running ```brew install 
 
 3. Create an instance by running ```spsc new``` and filling out the relevant fields.
 
-4. Run the instance you just created serverlessly with ```spsc ss <NAME>```. Note that any data you'd like to be persisted should be kept on the /data path.
+4. Run the instance you just created serverlessly with ```spsc sl <NAME>```. Note that any data you'd like to be persisted should be kept on the /data path.
 
 ## Commands
 
@@ -55,7 +55,7 @@ Set [fly.io](fly.io) profile
 - `api_key` — Fly API key (overwrites existing)
 - `allocate_ip` — Allocate a dedicated IPv4 address ($2/mo)
 
-### ss
+### sl
 
 Run an instance serverlessly
 
