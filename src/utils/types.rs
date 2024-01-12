@@ -53,6 +53,21 @@ pub enum InstanceState {
     Stopped,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct Config {
+    pub fly_api_key: Option<String>,
+    pub fly_app_name: Option<String>,
+}
+
+impl Config {
+    pub fn new() -> Self {
+        Config {
+            fly_api_key: None,
+            fly_app_name: None,
+        }
+    }
+}
+
 pub fn parse_state(state: &str) -> InstanceState {
     match state {
         "starting" | "started" => InstanceState::Running,

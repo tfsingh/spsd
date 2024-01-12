@@ -1,10 +1,11 @@
 use std::error::Error;
-use std::fs::OpenOptions;
-use std::io::Write;
 use std::process::Command;
 use std::str;
 
-use crate::utils::constants::get_app_name;
+use crate::utils::{
+    config::{get_app_name, write_config},
+    types::Config,
+};
 
 pub fn modify_profile(api_key: &str, allocate_ip: bool) -> Result<String, Box<dyn Error>> {
     let output = Command::new("flyctl")
@@ -21,12 +22,6 @@ pub fn modify_profile(api_key: &str, allocate_ip: bool) -> Result<String, Box<dy
         )
         .into());
     }
-
-    let mut file = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .append(false)
-        .open(".env")?;
 
     let result = get_app_name();
     let app_name = match result {
@@ -56,9 +51,12 @@ pub fn modify_profile(api_key: &str, allocate_ip: bool) -> Result<String, Box<dy
         }
     };
 
-    file.set_len(0)?;
-    writeln!(file, "FLY_APP_NAME={}", app_name)?;
-    writeln!(file, "FLY_API_KEY={}", api_key)?;
+    let config = Config {
+        fly_api_key: Some(api_key.to_owned()),
+        fly_app_name: Some(app_name),
+    };
+
+    write_config(&config)?;
 
     if allocate_ip {
         let mut child = Command::new("flyctl")

@@ -1,4 +1,4 @@
-use crate::utils::{self, constants::get_app_name};
+use crate::utils::{self, config::get_app_name};
 use std::{error::Error, process::Command};
 
 pub fn start_instance(name: &str) -> Result<String, Box<dyn Error>> {

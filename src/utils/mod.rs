@@ -1,4 +1,4 @@
-pub mod constants;
-mod json_handling;
+pub mod config;
+mod request_utils;
 pub mod machines;
 pub mod types;

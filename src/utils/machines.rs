@@ -1,5 +1,4 @@
-use super::constants::{get_headers, get_hostname};
-use super::json_handling;
+use super::request_utils::{self, get_headers, get_hostname};
 use super::types::{Instance, InstanceSpecs, Volume};
 use crate::utils::types::{Machine, Machines};
 use reqwest::{Client, Method};
@@ -65,7 +64,7 @@ pub fn create_machine(
     }
     let hostname = get_hostname()? + "/machines";
     let volume_id = create_volume(name, volume_gb, region)?;
-    let body = json_handling::create_body_from_specs(
+    let body = request_utils::create_body_from_specs(
         name,
         image,
         InstanceSpecs {
@@ -79,7 +78,7 @@ pub fn create_machine(
     )?;
     let machine = make_request::<Machine>(Method::POST, hostname, Some(body))?;
     if let Some(instance) = machine {
-        let instance = json_handling::parse_response_body(vec![instance])?.remove(0);
+        let instance = request_utils::parse_response_body(vec![instance])?.remove(0);
         poll_machine(&instance.machine_id)?;
         stop_machine(&instance.name)?;
         Ok(instance)
@@ -104,7 +103,7 @@ pub fn delete_machine(name: &str) -> Result<String, Box<dyn Error>> {
 pub fn get_instances() -> Result<Vec<Instance>, Box<dyn Error>> {
     let hostname = get_hostname()? + "/machines";
     let machines = make_request::<Machines>(Method::GET, hostname, None)?;
-    let instances = json_handling::parse_response_body(machines.unwrap());
+    let instances = request_utils::parse_response_body(machines.unwrap());
     instances
 }
 

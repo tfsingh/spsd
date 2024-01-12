@@ -1,5 +1,5 @@
 use crate::cli::io;
-use crate::utils::constants::get_app_name;
+use crate::utils::config::get_app_name;
 use crate::utils::machines::get_instances;
 use std::error::Error;
 use std::process::Command;
