@@ -110,7 +110,7 @@ Assuming your api key is valid, run ```flyctl ip allocate-v4``` on your terminal
 
 ### Images
 
-The following can be used instead of providing a concrete image url:
+The following can entered as an image instead of providing a concrete url:
 - base (ubuntu)
 - python
 - rust
