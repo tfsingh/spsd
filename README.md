@@ -81,7 +81,7 @@ First, allocate an IP to your app if you haven't already (see below). Ensure you
 
 **How can I allocate an IP if I didn't initially?**
 
-Assuming your api key is valid, run ```flyctl ip allocate-v4``` on your terminal.
+Assuming your api key is valid, run ```flyctl ip allocate-v4``` in your terminal.
 
 ## Appendix
 
