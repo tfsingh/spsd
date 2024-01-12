@@ -1,4 +1,4 @@
-use crate::utils;
+use crate::utils::{self, constants::get_app_name};
 use std::{error::Error, process::Command};
 
 pub fn start_instance(name: &str) -> Result<String, Box<dyn Error>> {
@@ -9,6 +9,8 @@ pub fn start_instance(name: &str) -> Result<String, Box<dyn Error>> {
         .arg("--machine")
         .arg(instance_id)
         .arg("--quiet")
+        .arg("-a")
+        .arg(get_app_name()?)
         .spawn()?;
     child.wait().unwrap();
     Ok(String::new())
