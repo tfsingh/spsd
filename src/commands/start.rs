@@ -8,7 +8,8 @@ pub fn start_instance(name: &str) -> Result<String, Box<dyn Error>> {
         .arg("console")
         .arg("--machine")
         .arg(instance_id)
+        .arg("--quiet")
         .spawn()?;
-    let _asd = child.wait().unwrap();
+    child.wait().unwrap();
     Ok(String::new())
 }

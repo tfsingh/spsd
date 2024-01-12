@@ -1,7 +1,6 @@
 use super::value_parsers;
 use clap::{arg, ArgMatches, Command};
 
-// todo: let region be set to a default, -q flag on new
 pub fn read_input() -> ArgMatches {
     Command::new("spec")
         .author("Tej Singh, tejfsingh@gmail.com")
@@ -54,8 +53,14 @@ pub fn read_input() -> ArgMatches {
                 .about("Destroy an instance")
                 .arg(arg!(<name> "Name of instance").required(true))
                 .arg_required_else_help(true),
-        )
-        .subcommand(Command::new("list").about("List all instances"))
-        .subcommand(Command::new("profile").about("Set profile for infra provider"))
+        ).subcommand(
+            Command::new("profile")
+            .about("Set fly.io profile (overwrites existing)")
+            .arg(arg!(<api_key> "Fly api key (required)").required(true))
+            .arg(arg!(<allocate_ip> "Allocate a dedicated IPv4 address ($2/mo)").required(true).value_parser(["y", "n"])))
+        .subcommand(
+            Command::new("list")
+            .about("List instances and attached IPs")
+            .arg(arg!(<ip> "List attached IPv4 addresses").required(false)))
         .get_matches()
 }

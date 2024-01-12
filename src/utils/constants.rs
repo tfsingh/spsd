@@ -14,7 +14,7 @@ fn get_api_key() -> Result<String, Box<dyn Error>> {
     }
 }
 
-fn get_app_name() -> Result<String, Box<dyn Error>> {
+pub fn get_app_name() -> Result<String, Box<dyn Error>> {
     dotenv().ok();
 
     match env::var("FLY_APP_NAME") {

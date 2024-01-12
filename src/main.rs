@@ -70,9 +70,28 @@ fn main() {
             handle_command_with_name(args, |name| commands::destroy::destroy_instance(name))
         }
 
-        Some(("list", _)) => commands::list::list_instances(),
+        Some(("profile", args)) => {
+            let api_key = args.try_get_one::<String>("api_key");
+            let allocate_ip = args.try_get_one::<String>("allocate_ip");
 
-        Some(("profile", _args)) => commands::profile::modify_profile(),
+            match (api_key, allocate_ip) {
+                (Ok(Some(app_name)), Ok(Some(allocate_ip))) => {
+                    let should_allocate = allocate_ip == "y";
+                    commands::profile::modify_profile(app_name, should_allocate)
+                }
+                _ => Err("Error in argument parsing, use -h to see valid values".into()),
+            }
+        }
+
+        Some(("list", args)) => {
+            let list_ips = args.try_get_one::<String>("ip");
+            match list_ips {
+                Ok(Some(_)) => commands::list::list_instances(true),
+                Ok(None) => commands::list::list_instances(false),
+                _ => Err("Error in argument parsing, use -h to see valid values".into()),
+            }
+        }
+
         _ => Err("Subcommand invalid".into()),
     };
 
