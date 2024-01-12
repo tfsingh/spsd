@@ -10,7 +10,7 @@ You can install spsc via your terminal with homebrew by running ```brew install 
 
 ## Quick start
 
-1. Navigate to [fly.io](fly.io), create an account, and [generate](https://fly.io/user/personal_access_tokens) an access token.
+1. Navigate to [fly.io](fly.io), create an account (note you may need to configure billing before running machines), and [generate](https://fly.io/user/personal_access_tokens) an access token.
 
 2. Configure your profile with ```spsc profile <API_KEY> <ALLOCATE_IP>```.
 
@@ -83,7 +83,6 @@ First, allocate an IP to your app if you haven't already (see below). Ensure you
 
 Assuming your api key is valid, run ```flyctl ip allocate-v4``` on your terminal.
 
-
 ## Appendix
 
 ### Regions
@@ -110,7 +109,7 @@ Assuming your api key is valid, run ```flyctl ip allocate-v4``` on your terminal
 
 ### Images
 
-The following can entered as an image instead of providing a concrete url:
+The following can be entered as an image instead of providing a concrete url:
 - base (ubuntu)
 - python
 - rust
