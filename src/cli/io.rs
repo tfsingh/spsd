@@ -80,6 +80,7 @@ fn get_user_input(prompt: &str) -> Option<String> {
 }
 
 pub fn prompt_instance_creation(mut instance: InstanceInput) -> InstanceInput {
+    println!("");
     instance.name = match &instance.name {
         Some(_) => instance.name,
         None => get_user_input("Instance name: "),

@@ -30,7 +30,7 @@ pub fn read_input() -> ArgMatches {
                         .value_parser(value_parsers::parse_region)
                         .required(false),
                 ).arg(arg!(<port> "Local port to expose (optional)").value_parser(value_parsers::parse_port).required(false))
-                .after_help("Please note fly enforces cpu/memory ratios that may make your configuration invalid"),
+                .after_help("Please note fly enforces cpu/memory ratios that render your configuration invalid"),
         )
         .subcommand(
             Command::new("start")
