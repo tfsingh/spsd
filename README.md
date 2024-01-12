@@ -2,13 +2,13 @@
 
 ![spsd](resources/list.png)
 
-spsd is a command line utility for managing state persistent, serverless devboxes. With spsd, you can spin up instances with 16 vCPUs, 32 gb of memory, and 500 gb of persistent disk in a region of your choice with a port open to the internet, in seconds.
+spsd is a command line utility for managing state persistent, serverless devboxes. With spsd, you can spin up instances with 16 vCPUs, 32 gb of memory, and 500 gb of persistent disk in a region of your choice with a port open to the internet in seconds.
 
 Instances are machines (Firecracker VMs) hosted by [fly.io](fly.io), launched from a docker image. You can bring your own or use one of the [base images](#images) included in spsd. 
 
 ## Installation
 
-You can install spsd with homebrew by running ```brew tap tfsingh/spsd && brew install spsd```. You can also install from source with ```cargo install spsd``` (must install flyctl in this case).
+You can install spsd via homebrew by running ```brew tap tfsingh/spsd && brew install spsd``` in your terminal. You can also install from source with ```cargo install spsd``` (must install flyctl in this case).
 
 ## Quick start
 
@@ -30,7 +30,7 @@ Destroy an instance
 
 ### list
 
-List instances (name, image, cpus, memory, region, port, state)
+List instances and associated data (name, image, cpus, memory, region, port, state)
 
 - `ip` — List attached IPv4 addresses (optional)
 
@@ -77,7 +77,7 @@ Stop an instance
 
 **How do I configure my instance to respond to HTTP requests?**
 
-First, allocate an IP to your app if you haven't already (see below). Ensure your instance has a port exposed (for the sake of example, we'll say we configured our instance to listen on port 8080), and run ```spsd list ip``` to view your dedicated IPv4 address (i.e. 123.1.23.12). Your sever should be listening on whatever port you exposed above in your instance configuration _locally_ (localhost:8080) and it'll be accesible publicly (http://123.1.23.12:8080).
+First, allocate an IP to your app if you haven't already (see below). Ensure your instance has a port exposed (for example, we'll say we configured our instance to listen on port 8080), and run ```spsd list ip``` to view your dedicated IPv4 address (i.e. 123.1.23.12). Ensure your sever is listening on whatever port you exposed above in your instance configuration _locally_ (localhost:8080) and it'll be accesible publicly at the same port on your allocated ip (http://123.1.23.12:8080).
 
 **How can I allocate an IP if I didn't initially?**
 
