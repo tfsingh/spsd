@@ -9,11 +9,13 @@ pub fn parse_cpu(count: &str) -> Result<u32, String> {
 }
 
 pub fn parse_image(image: &str) -> Result<String, String> {
-    // todo: make this a match with example images
-    if image == "base" {
-        Ok(String::from("registry-1.docker.io/library/python:latest"))
-    } else {
-        Ok(image.to_string())
+    match image {
+        "base" => Ok(String::from("registry-1.docker.io/library/ubuntu:latest")),
+        "python" => Ok(String::from("registry-1.docker.io/library/python:latest")),
+        "rust" => Ok(String::from("registry-1.docker.io/library/rust:latest")),
+        "go" => Ok(String::from("registry-1.docker.io/library/golang:latest")),
+        "node" => Ok(String::from("registry-1.docker.io/library/node:latest")),
+        _ => Ok(image.to_string()),
     }
 }
 

@@ -115,9 +115,7 @@ The following can be used instead of providing a concrete image url:
 - python
 - rust
 - go
-- cpp
 - node
-- redis
 
 ## Acknowledgements
 

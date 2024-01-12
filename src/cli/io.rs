@@ -11,12 +11,12 @@ extern crate prettytable;
 use prettytable::{cell, row, Cell, Row, Table};
 
 pub fn display_error(err: Box<dyn Error>) {
-    println!("\n{}: {}", "ERROR".red(), err);
+    println!("{}: {}", "ERROR".red(), err);
 }
 
 pub fn display_success(message: &str) {
     if message != String::new() {
-        println!("\n{}: {}", "SUCCESS".blue(), message)
+        println!("{}: {}", "SUCCESS".blue(), message)
     }
 }
 
@@ -105,12 +105,15 @@ pub fn prompt_instance_creation(mut instance: InstanceInput) -> InstanceInput {
         Some(_) => instance.region,
         None => get_user_input("Region: ").and_then(|input| parse_region(&input).ok()),
     };
-    instance.port = get_user_input("Port (optional, enter to continue): ").and_then(|input| {
-        if input.is_empty() {
-            None
-        } else {
-            parse_port(&input).ok()
-        }
-    });
+    instance.port = match &instance.port {
+        Some(_) => instance.port,
+        None => get_user_input("Port (optional, enter to continue): ").and_then(|input| {
+            if input.is_empty() {
+                None
+            } else {
+                parse_port(&input).ok()
+            }
+        }),
+    };
     instance
 }
