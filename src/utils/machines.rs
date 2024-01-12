@@ -49,7 +49,6 @@ pub fn delete_volume(volume_id: &str) -> Result<String, Box<dyn Error>> {
     }
 }
 
-// can make optimizations here to reduce number of requests
 pub fn create_machine(
     name: &str,
     image: &str,
@@ -124,7 +123,6 @@ async fn make_request<T: DeserializeOwned>(
     let response = request.send().await?;
     let success = response.status().is_success();
     let response_body = response.text().await?;
-    //println!("{:?}", response_body);
     if success {
         let parsed_response: T = serde_json::from_str(&response_body)?;
         Ok(Some(parsed_response))
