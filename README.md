@@ -1,22 +1,22 @@
-# spsc
+# spsd
 
-spsc is a command line utility for managing state persistent, serverless devboxes. With spsc, you can spin up instances with 16 vCPUs, 32 gb of memory, and 500 gb of persistent disk in a region of your choice with a port open to the internet, in seconds.
+spsd is a command line utility for managing state persistent, serverless devboxes. With spsd, you can spin up instances with 16 vCPUs, 32 gb of memory, and 500 gb of persistent disk in a region of your choice with a port open to the internet, in seconds.
 
-Instances are machines (Firecracker VMs) hosted by [fly.io](fly.io), launched from a docker image. You can bring your own or use one of the [base images](#images) included in spsc. 
+Instances are machines (Firecracker VMs) hosted by [fly.io](fly.io), launched from a docker image. You can bring your own or use one of the [base images](#images) included in spsd. 
 
 ## Installation
 
-You can install spsc via your terminal with homebrew by running ```brew install spsc``` or from source with ```cargo install spsc```.
+You can install spsd via your terminal with homebrew by running ```brew install spsd``` or from source with ```cargo install spsd```.
 
 ## Quick start
 
 1. Navigate to [fly.io](fly.io), create an account (note you may need to configure billing before running machines), and [generate](https://fly.io/user/personal_access_tokens) an access token.
 
-2. Configure your profile with ```spsc profile <API_KEY> <ALLOCATE_IP>```.
+2. Configure your profile with ```spsd profile <API_KEY> <ALLOCATE_IP>```.
 
-3. Create an instance by running ```spsc new``` and filling out the relevant fields.
+3. Create an instance by running ```spsd new``` and filling out the relevant fields.
 
-4. Run the instance you just created serverlessly with ```spsc sl <NAME>```. Note that any data you'd like to be persisted should be kept on the /data path.
+4. Run the instance you just created serverlessly with ```spsd sl <NAME>```. Note that any data you'd like to be persisted should be kept on the /data path.
 
 ## Commands
 
@@ -77,7 +77,7 @@ Stop an instance
 
 **How do I configure my instance to respond to HTTP requests?**
 
-First, allocate an IP to your app if you haven't already (see below). Ensure your instance has a port exposed (for the sake of example, we'll say we configured our instance to listen on port 8080), and run ```spsc list ip``` to view your dedicated IPv4 address (i.e. 123.1.23.12). Your sever should be listening on whatever port you exposed above in your instance configuration _locally_ (localhost:8080) and it'll be accesible publicly (http://123.1.23.12:8080).
+First, allocate an IP to your app if you haven't already (see below). Ensure your instance has a port exposed (for the sake of example, we'll say we configured our instance to listen on port 8080), and run ```spsd list ip``` to view your dedicated IPv4 address (i.e. 123.1.23.12). Your sever should be listening on whatever port you exposed above in your instance configuration _locally_ (localhost:8080) and it'll be accesible publicly (http://123.1.23.12:8080).
 
 **How can I allocate an IP if I didn't initially?**
 
@@ -118,4 +118,4 @@ The following can be entered as an image instead of providing a concrete url:
 
 ## Acknowledgements
 
-Thank you to Erik Bernhardsson for the [inspiration](https://twitter.com/bernhardsson/status/1543074570512617475) for spsc, [nebula](https://github.com/nebulatgs/fade) for the code used to parse responses from Fly's API, and the [fly.io](fly.io) team for building what they have.
+Thank you to Erik Bernhardsson for the [inspiration](https://twitter.com/bernhardsson/status/1543074570512617475) for spsd, [nebula](https://github.com/nebulatgs/fade) for the code used to parse responses from Fly's API, and the [fly.io](fly.io) team for building what they have.

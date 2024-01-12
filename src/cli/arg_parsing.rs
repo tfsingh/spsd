@@ -2,7 +2,7 @@ use super::value_parsers;
 use clap::{arg, ArgMatches, Command};
 
 pub fn read_input() -> ArgMatches {
-    Command::new("spsc")
+    Command::new("spsd")
         .author("Tej Singh, tejfsingh@gmail.com")
         .version("0.1")
         .about("An interface for managing state persistent ephermeral compute")

@@ -1,5 +1,5 @@
 [package]
-name = "spsc"
+name = "spsd"
 version = "0.1.0"
 description = "state persistent serverless compute"
 edition = "2021"
