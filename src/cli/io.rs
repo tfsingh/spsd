@@ -8,15 +8,15 @@ use std::{
     io::{self, Write},
 };
 extern crate prettytable;
-use prettytable::{cell, row, Cell, Row, Table};
+use prettytable::{row, Cell, Row, Table};
 
 pub fn display_error(err: Box<dyn Error>) {
-    println!("{}: {}", "ERROR".red(), err);
+    println!("\n{}: {}", "ERROR".red(), err);
 }
 
 pub fn display_success(message: &str) {
     if message != String::new() {
-        println!("{}: {}", "SUCCESS".blue(), message)
+        println!("\n{}: {}", "SUCCESS".blue(), message)
     }
 }
 

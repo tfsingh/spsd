@@ -2,3 +2,4 @@
 .vscode
 instances.csv
 .env
+**/.DS_Store

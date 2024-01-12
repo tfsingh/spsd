@@ -11,7 +11,7 @@ pub fn read_input() -> ArgMatches {
             Command::new("new")
                 .about("Create a new instance")
                 .arg(arg!(<name> "Name of instance").required(false))
-                .arg(arg!(<image> "Url of image (\"base\" for docker-python)")
+                .arg(arg!(<image> "Url of image (\"base\" for ubuntu)")
                         .value_parser(value_parsers::parse_image)
                         .required(false))
                 .arg(
