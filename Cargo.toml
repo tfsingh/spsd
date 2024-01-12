@@ -1,7 +1,7 @@
 [package]
 name = "spsd"
 version = "0.1.0"
-description = "state persistent serverless compute"
+description = "state persistent serverless devboxes"
 edition = "2021"
 readme = "README.md"
 license = "MIT"

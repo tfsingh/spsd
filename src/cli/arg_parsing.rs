@@ -5,7 +5,7 @@ pub fn read_input() -> ArgMatches {
     Command::new("spsd")
         .author("Tej Singh, tejfsingh@gmail.com")
         .version("0.1")
-        .about("An interface for managing state persistent ephermeral compute")
+        .about("A utility for managing state persistent serverless devboxes")
         .subcommand_required(true)
         .subcommand(
             Command::new("new")
