@@ -4,7 +4,7 @@
 
 spsd is a command line utility for managing state persistent, serverless devboxes. With spsd, you can spin up instances with 16 vCPUs, 32 gb of memory, and 500 gb of persistent disk in a region of your choice with a port open to the internet in seconds.
 
-Instances are machines (Firecracker VMs) hosted by [fly.io](fly.io), launched from a docker image. You can bring your own or use one of the [base images](#images) included in spsd. 
+Instances are machines (Firecracker VMs) hosted by [fly.io](https://fly.io), launched from a docker image. You can bring your own or use one of the [base images](#images) included in spsd.
 
 ## Installation
 
@@ -12,9 +12,9 @@ You can install spsd via homebrew by running ```brew tap tfsingh/spsd && brew in
 
 ## Quick start
 
-1. Navigate to [fly.io](fly.io), create an account (note you may need to configure billing before running machines), and [generate](https://fly.io/user/personal_access_tokens) an access token.
+1. Navigate to [fly.io](https://fly.io), create an account (you also need to configure billing although small instances should be free), and [generate](https://fly.io/user/personal_access_tokens) an access token.
 
-2. Configure your profile with ```spsd profile <API_KEY> <ALLOCATE_IP>```.
+2. Configure your profile with ```flyctl auth login``` and ```spsd profile <API_KEY> <ALLOCATE_IP>```.
 
 3. Create an instance by running ```spsd new``` and filling out the relevant fields.
 
@@ -50,7 +50,7 @@ Please note that Fly enforces CPU/memory ratios that may render your configurati
 
 ### profile
 
-Set [fly.io](fly.io) profile
+Set [fly.io](https://fly.io) profile
 
 - `api_key` — Fly API key (overwrites existing)
 - `allocate_ip` — Allocate a dedicated IPv4 address ($2/mo)
@@ -81,7 +81,7 @@ First, allocate an IP to your app if you haven't already (see below). Ensure you
 
 **How can I allocate an IP if I didn't initially?**
 
-Assuming your api key is valid, run ```flyctl ip allocate-v4``` in your terminal.
+Assuming your api key is valid, run ```flyctl ip allocate-v4 -a <APP_NAME>``` in your terminal (app name is available on the fly.io [dashboard](https://fly.io/dashboard)).
 
 ## Appendix
 
@@ -118,4 +118,4 @@ The following can be entered as an image instead of providing a concrete url:
 
 ## Acknowledgements
 
-Thank you to Erik Bernhardsson for the [inspiration](https://twitter.com/bernhardsson/status/1543074570512617475) for spsd, nebula for the [code](https://github.com/nebulatgs/fade) used to parse responses from Fly's API, and the [fly.io](fly.io) team for building what they have.
+Thank you to Erik Bernhardsson for the [inspiration](https://twitter.com/bernhardsson/status/1543074570512617475) for spsd, nebula for the [code](https://github.com/nebulatgs/fade) used to parse responses from Fly's API, and the [fly.io](https://fly.io) team for building what they have.
