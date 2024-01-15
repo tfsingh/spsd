@@ -73,6 +73,7 @@ pub fn create_body_from_specs(
                 "size_gb_limit": 500,
                 "volume": volume_id
             }],
+            "disable_machine_autostart": true,
         }
     });
 

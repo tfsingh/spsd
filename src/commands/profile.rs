@@ -8,12 +8,7 @@ use crate::utils::{
 };
 
 pub fn modify_profile(api_key: &str, allocate_ip: bool) -> Result<String, Box<dyn Error>> {
-    let output = Command::new("flyctl")
-        .arg("auth")
-        .arg("token")
-        .arg("-t")
-        .arg(api_key)
-        .output()?;
+    let output = Command::new("flyctl").arg("auth").arg("login").output()?;
 
     if !output.status.success() {
         return Err(format!(

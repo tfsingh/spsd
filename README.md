@@ -14,7 +14,7 @@ You can install spsd via homebrew by running ```brew tap tfsingh/spsd && brew in
 
 1. Navigate to [fly.io](https://fly.io), create an account (you also need to configure billing although small instances should be free), and [generate](https://fly.io/user/personal_access_tokens) an access token.
 
-2. Configure your profile with ```flyctl auth login``` and ```spsd profile <API_KEY> <ALLOCATE_IP>```.
+2. Configure your profile with ```spsd profile <API_KEY> <ALLOCATE_IP>```, with API_KEY being the api key you generated above and ALLOCATE_IP (expose your instances to the internet) being either y/n.
 
 3. Create an instance by running ```spsd new``` and filling out the relevant fields.
 
