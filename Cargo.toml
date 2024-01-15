@@ -1,6 +1,6 @@
 [package]
 name = "spsd"
-version = "0.1.2"
+version = "0.1.3"
 description = "state persistent serverless devboxes"
 edition = "2021"
 readme = "README.md"
