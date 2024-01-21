@@ -47,10 +47,27 @@ pub struct InstanceSpecs {
     pub volume_gb: u32,
 }
 
+impl InstanceSpecs {
+    pub fn phony() -> Self {
+        Self {
+            cpu_count: 0,
+            memory_mb: 0,
+            volume_gb: 0,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum InstanceState {
     Running,
     Stopped,
+}
+
+pub fn parse_state(state: &str) -> InstanceState {
+    match state {
+        "starting" | "started" => InstanceState::Running,
+        _ => InstanceState::Stopped,
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -64,23 +81,6 @@ impl Config {
         Config {
             fly_api_key: None,
             fly_app_name: None,
-        }
-    }
-}
-
-pub fn parse_state(state: &str) -> InstanceState {
-    match state {
-        "starting" | "started" => InstanceState::Running,
-        _ => InstanceState::Stopped,
-    }
-}
-
-impl InstanceSpecs {
-    pub fn phony() -> Self {
-        Self {
-            cpu_count: 0,
-            memory_mb: 0,
-            volume_gb: 0,
         }
     }
 }

@@ -11,7 +11,7 @@ pub fn parse_cpu(count: &str) -> Result<u32, String> {
 
 pub fn parse_image(image: &str) -> Result<String, String> {
     match image {
-        "base" => Ok(String::from("registry-1.docker.io/library/ubuntu:latest")),
+        "base" => Ok(String::from("registry-1.docker.io/tfsingh/base:v0.3")),
         "python" => Ok(String::from("registry-1.docker.io/library/python:latest")),
         "rust" => Ok(String::from("registry-1.docker.io/library/rust:latest")),
         "go" => Ok(String::from("registry-1.docker.io/library/golang:latest")),

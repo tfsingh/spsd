@@ -85,7 +85,8 @@ pub fn prompt_instance_creation(mut instance: InstanceInput) -> InstanceInput {
     };
     instance.image = match &instance.image {
         Some(_) => instance.image,
-        None => get_user_input("Image url: ").and_then(|input| parse_image(&input).ok()),
+        None => get_user_input("Image url (\"base\" for default): ")
+            .and_then(|input| parse_image(&input).ok()),
     };
     instance.cpus = match &instance.cpus {
         Some(_) => instance.cpus,

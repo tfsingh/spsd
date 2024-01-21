@@ -83,6 +83,10 @@ First, allocate an IP to your app if you haven't already (see below). Ensure you
 
 Assuming your api key is valid, run ```flyctl ip allocate-v4 -a <APP_NAME>``` in your terminal (app name is available on the fly.io [dashboard](https://fly.io/dashboard)).
 
+**How do I use my own Docker image?**
+
+Publish your image with ```docker push```, ensure your repository is public, and enter "registry-1.docker.io/YOUR-DOCKER-USERNAME/IMAGE-NAME:TAG" as your image url.
+
 ## Appendix
 
 ### Regions
